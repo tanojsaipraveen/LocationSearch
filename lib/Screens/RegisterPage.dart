@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_signin_button/flutter_signin_button.dart';
-import 'package:locationsearch/Screens/HomePage.dart';
-import 'package:locationsearch/Screens/RegisterPage.dart';
+import 'package:locationsearch/Screens/LoginPage.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController repasswordController = TextEditingController();
   final RegExp _emailRegExp =
       RegExp(r'^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-
-  bool _isEmailValid = true;
 
   final RegExp _passwordRegExp =
       RegExp(r'^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$&*])(?=.{8,})');
 
   bool _isPasswordValid = true;
+
+  bool _isEmailValid = true;
+  bool _passwordsMatch = true;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,18 +35,18 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    "Welcome",
+                  Text(
+                    "Register",
                     style: TextStyle(fontSize: 50),
                   ),
-                  const SizedBox(
+                  SizedBox(
                     height: 5,
                   ),
                   Text(
-                    "Enter your Email address to sign in.",
+                    "Enter your details to Register.",
                     style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
-                  const SizedBox(
+                  SizedBox(
                     height: 80,
                   ),
                   TextField(
@@ -69,12 +69,12 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(
                               10.0), // Adjust border radius here
                           borderSide:
-                              const BorderSide(color: Colors.black) // No border
+                              BorderSide(color: Colors.black) // No border
                           ),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(
                               10.0), // Adjust border radius here
-                          borderSide: const BorderSide(color: Colors.black)),
+                          borderSide: BorderSide(color: Colors.black)),
                       hintText: 'Email',
                       hintStyle: const TextStyle(
                           fontSize: 15,
@@ -85,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                     ),
                   ),
-                  const SizedBox(
+                  SizedBox(
                     height: 10,
                   ),
                   TextField(
@@ -105,12 +105,12 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(
                               10.0), // Adjust border radius here
                           borderSide:
-                              const BorderSide(color: Colors.black) // No border
+                              BorderSide(color: Colors.black) // No border
                           ),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(
                               10.0), // Adjust border radius here
-                          borderSide: const BorderSide(color: Colors.black)),
+                          borderSide: BorderSide(color: Colors.black)),
                       hintText: 'Password',
                       hintStyle: const TextStyle(
                           fontSize: 15,
@@ -121,115 +121,78 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                     ),
                   ),
-
                   const SizedBox(
+                    height: 10,
+                  ),
+                  TextField(
+                    controller: repasswordController,
+                    obscureText: true,
+                    onChanged: (value) {
+                      setState(() {
+                        _passwordsMatch = passwordController.text == value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Re-enter your password',
+                      errorText:
+                          _passwordsMatch ? null : 'Passwords do not match',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                              10.0), // Adjust border radius here
+                          borderSide:
+                              const BorderSide(color: Colors.black) // No border
+                          ),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                              10.0), // Adjust border radius here
+                          borderSide: const BorderSide(color: Colors.black)),
+                      hintText: 'ReEnter Password',
+                      hintStyle: const TextStyle(
+                          fontSize: 15,
+                          color:
+                              Colors.grey, // Adjust the color of the hint text
+                          fontWeight: FontWeight
+                              .w400 // You can adjust other properties like fontSize, fontWeight, etc.
+                          ),
+                    ),
+                  ),
+                  SizedBox(
                     height: 20,
                   ),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                                 horizontal: 0, vertical: 15),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                        onPressed: () {
-                          Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                  builder: (context) => const MyHomePage()),
-                              (Route<dynamic> route) => false);
-                          if (emailController.text.isNotEmpty &&
-                              passwordController.text.isNotEmpty) {
-                            if (_isEmailValid) {
-                              // Email is valid, perform your logic here
-                              print('Valid Email: ${emailController.text}');
-                              print("Success login");
-                              // Navigator.of(context).pushAndRemoveUntil(
-                              //     MaterialPageRoute(
-                              //         builder: (context) => const MyHomePage()),
-                              //     (Route<dynamic> route) => false);
-                            } else {
-                              // Email is not valid, show an error message
-                              print('Invalid Email');
-                            }
-                          } else {
-                            print("Please enter details");
-                          }
-                        },
-                        child: const Text("SIGN IN")),
+                        onPressed: () {},
+                        child: Text("SIGN UP")),
                   ),
-                  const SizedBox(
+                  SizedBox(
                     height: 20,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have account?"),
-                      const SizedBox(
+                      Text("Do you have account?"),
+                      SizedBox(
                         width: 20,
                       ),
                       GestureDetector(
                         onTap: () {
                           Navigator.of(context).pushAndRemoveUntil(
                               MaterialPageRoute(
-                                  builder: (context) => const RegisterPage()),
+                                  builder: (context) => LoginPage()),
                               (Route<dynamic> route) => false);
                         },
-                        child: const Text(
-                          "Create new account",
+                        child: Text(
+                          "Signin Here",
                           style: TextStyle(color: Colors.green),
                         ),
                       )
                     ],
                   ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Or",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  SizedBox(
-                    height: 45,
-                    width: double.infinity,
-                    child: SignInButton(
-                      Buttons.GoogleDark,
-                      text: "Sign up with Google",
-                      onPressed: () {},
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  SizedBox(
-                    height: 45,
-                    width: double.infinity,
-                    child: SignInButton(
-                      Buttons.Facebook,
-                      text: "Sign up with Facebook",
-                      onPressed: () {},
-                    ),
-                  ),
-
-                  // SizedBox(
-                  //   width: double.infinity,
-                  //   child: ElevatedButton.icon(
-                  //       style: ElevatedButton.styleFrom(
-                  //           padding: EdgeInsets.symmetric(
-                  //               horizontal: 0, vertical: 10),
-                  //           tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                  //       onPressed: () {},
-                  //       icon: Icon(Icons.facebook),
-                  //       label: Text(
-                  //         'CONNECT WITH GOOGLE',
-                  //         style: TextStyle(wordSpacing: 2),
-                  //       )),
-                  // )
                 ],
               ),
             ),
