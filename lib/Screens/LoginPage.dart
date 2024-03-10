@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:locationsearch/Apis/GetLocationWeather.dart';
+import 'package:locationsearch/Screens/ForgotPasswordPage.dart';
 import 'package:locationsearch/Screens/HomePage.dart';
 import 'package:locationsearch/Screens/RegisterPage.dart';
 
@@ -23,6 +25,14 @@ class _LoginPageState extends State<LoginPage> {
       RegExp(r'^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$&*])(?=.{8,})');
 
   bool _isPasswordValid = true;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    var re = GetLocationWeather.getDetails();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,7 +131,22 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                     ),
                   ),
-
+                  SizedBox(
+                    height: 5,
+                  ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => ForgotPasswordPage()));
+                      },
+                      child: const Text(
+                        "Forgot Password?",
+                        style: TextStyle(color: Colors.green),
+                      ),
+                    ),
+                  ),
                   const SizedBox(
                     height: 20,
                   ),
@@ -169,10 +194,12 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                  builder: (context) => const RegisterPage()),
-                              (Route<dynamic> route) => false);
+                          // Navigator.of(context).pushAndRemoveUntil(
+                          //     MaterialPageRoute(
+                          //         builder: (context) => const RegisterPage()),
+                          //     (Route<dynamic> route) => false);
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => RegisterPage()));
                         },
                         child: const Text(
                           "Create new account",
