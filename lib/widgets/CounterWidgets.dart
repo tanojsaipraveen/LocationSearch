@@ -82,7 +82,9 @@ class _CounterState extends State<Counter> {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(100),
-                      color: Theme.of(context).primaryColor,
+                      color: _value != 0
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey,
                     ),
                     child: Icon(
                       Icons.remove,
