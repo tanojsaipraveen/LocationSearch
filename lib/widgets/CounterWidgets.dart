@@ -11,6 +11,7 @@ class Counter extends StatefulWidget {
     required this.initialValue,
     this.onIncrement,
     this.onDecrement,
+    required Icon icon,
   });
 
   @override
@@ -50,53 +51,74 @@ class _CounterState extends State<Counter> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: Text(widget.header),
-        ),
-        Row(
-          children: [
-            Container(
-              child: GestureDetector(
-                onTap: _decrement,
-                child: Icon(
-                  Icons.remove,
-                  color: Colors.white,
-                  size: 30,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Row(
+                children: [
+                  Icon(Icons.person),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  Text(
+                    widget.header,
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: _decrement,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100),
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    child: Icon(
+                      Icons.remove,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
                 ),
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3),
-                color: Colors.grey,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(14.0),
-              child: Text(
-                _value.toString(),
-                style: TextStyle(fontSize: 20),
-              ),
-            ),
-            Container(
-              child: GestureDetector(
-                onTap: _increment,
-                child: Icon(
-                  Icons.add,
-                  color: Colors.white,
-                  size: 30,
+                SizedBox(
+                  width: 20,
                 ),
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3),
-                color: Colors.grey,
-              ),
+                Text(_value.toString(),
+                    style:
+                        TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                SizedBox(
+                  width: 20,
+                ),
+                GestureDetector(
+                  onTap: _increment,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100),
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    child: Icon(
+                      Icons.add,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ],
+          )
+        ],
+      ),
     );
   }
 }

@@ -14,6 +14,7 @@ import 'package:locationsearch/Screens/SearchPage.dart';
 import 'package:locationsearch/widgets/CounterWidgets.dart';
 import 'package:locationsearch/widgets/LocationButton.dart';
 import 'package:locationsearch/widgets/TextFieldWidget.dart';
+import 'package:locationsearch/widgets/TravelActivitySelector.dart';
 import 'package:page_transition/page_transition.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -33,11 +34,20 @@ class _MyHomePageState extends State<MyHomePage> {
   final DateTime today = DateTime.now();
   NearbyModel? nearbydata;
   int selectedTrip = 0;
+  final List<String> travelActivities = [
+    'Sightseeing',
+    'Hiking and Trekking',
+    'Cultural Tours',
+    'Swing',
+    'Cool'
+  ];
   Widget customRadio(String text, int index) {
     return OutlinedButton(
         style: OutlinedButton.styleFrom(
-            backgroundColor:
-                (selectedTrip == index) ? Colors.green : Colors.white),
+          backgroundColor: (selectedTrip == index)
+              ? Theme.of(context).primaryColor
+              : Colors.white,
+        ),
         onPressed: () {
           setState(() {
             selectedTrip = index;
@@ -45,7 +55,8 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         child: Text(
           text,
-          style: const TextStyle(color: Colors.black),
+          style: TextStyle(
+              color: (selectedTrip == index) ? Colors.white : Colors.black),
         ));
   }
 
@@ -500,40 +511,58 @@ class _MyHomePageState extends State<MyHomePage> {
                 const SizedBox(
                   height: 20,
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Counter(
-                      header: "Men",
-                      initialValue: 0,
-                      // onIncrement: () {
-                      //   print("Counter 1 incremented");
-                      // },
-                      // onDecrement: () {
-                      //   print("Counter 1 decremented");
-                      // },
-                    ),
-                    Counter(
-                      header: "Women",
-                      initialValue: 0,
-                      // onIncrement: () {
-                      //   print("Counter 1 incremented");
-                      // },
-                      // onDecrement: () {
-                      //   print("Counter 1 decremented");
-                      // },
-                    ),
-                    Counter(
-                      header: "Childern",
-                      initialValue: 0,
-                      // onIncrement: () {
-                      //   print("Counter 1 incremented");
-                      // },
-                      // onDecrement: () {
-                      //   print("Counter 1 decremented");
-                      // },
-                    ),
-                  ],
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Text(
+                    "Members",
+                    style: TextStyle(fontSize: 24),
+                  ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Counter(
+                  header: "Men",
+                  initialValue: 0,
+                  icon: Icon(Icons.person),
+                ),
+                Divider(
+                  height: 20,
+                ),
+                Counter(
+                  header: "Women",
+                  initialValue: 0,
+                  icon: Icon(Icons.e_mobiledata),
+                ),
+                Divider(
+                  height: 20,
+                ),
+                Counter(
+                  header: "children",
+                  initialValue: 0,
+                  icon: Icon(Icons.person),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Text(
+                    "Activities",
+                    style: TextStyle(fontSize: 24),
+                  ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                TravelActivitySelector(
+                  travelActivities: travelActivities,
+                  onSelectionChanged: (selectedActivities) {
+                    print(selectedActivities);
+                  },
+                ),
+                SizedBox(
+                  height: 20,
                 )
               ],
             ),
