@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:locationsearch/Apis/GetLocationWeather.dart';
 import 'package:locationsearch/Apis/NearbyApi.dart';
 import 'package:locationsearch/Apis/WeatherApi.dart';
 import 'package:locationsearch/DB/LocalRepo.dart';
@@ -12,7 +14,9 @@ import 'package:locationsearch/Screens/LoginPage.dart';
 import 'package:locationsearch/Screens/RegisterPage.dart';
 import 'package:locationsearch/Screens/SearchPage.dart';
 import 'package:locationsearch/widgets/CounterWidgets.dart';
+import 'package:locationsearch/widgets/CustomRadio.dart';
 import 'package:locationsearch/widgets/LocationButton.dart';
+import 'package:locationsearch/widgets/NearbyPlacesWidget.dart';
 import 'package:locationsearch/widgets/TextFieldWidget.dart';
 import 'package:locationsearch/widgets/TravelActivitySelector.dart';
 import 'package:page_transition/page_transition.dart';
@@ -31,9 +35,12 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isResultAviable = false;
   String? weatherReportResult;
   bool isNearbyDataAvaliable = false;
+  double? lon;
+  double? lat;
   final DateTime today = DateTime.now();
-  NearbyModel? nearbydata;
-  int selectedTrip = 0;
+  int _selectedTrip = 0;
+  Future<NearbyModel>? _nearby;
+
   final List<String> travelActivities = [
     'Sightseeing',
     'Hiking and Trekking',
@@ -41,28 +48,51 @@ class _MyHomePageState extends State<MyHomePage> {
     'Swing',
     'Cool'
   ];
-  Widget customRadio(String text, int index) {
-    return OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          backgroundColor: (selectedTrip == index)
-              ? Theme.of(context).primaryColor
-              : Colors.white,
-        ),
-        onPressed: () {
-          setState(() {
-            selectedTrip = index;
-          });
-        },
-        child: Text(
-          text,
-          style: TextStyle(
-              color: (selectedTrip == index) ? Colors.white : Colors.black),
-        ));
+
+  void _handleTap(int index) {
+    // Handle the logic without using setState
+    // For example, you can update the selectedTrip directly here
+    // selectedTrip = index;
+    _selectedTrip = index;
+    setState(() {});
+    // Do something else...
   }
 
   TextEditingController _controller = TextEditingController();
   DateTimeRange selectedDates = DateTimeRange(
       start: DateTime.now(), end: DateTime.now().add(const Duration(days: 2)));
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    // lon = 109.262909;
+    // lat = 12.346705;
+    _initializeData();
+    super.initState();
+  }
+
+  Future<NearbyModel>? fetchData() async {
+    // Simulate fetching data from an API
+    return await NearbyApi.getNearByPlaces(lon!, lat!);
+  }
+
+  Future<void> _initializeData() async {
+    try {
+      var result = await GetLocationWeather.getDetails();
+
+      setState(() {
+        lon = double.parse(result[0]);
+        lat = double.parse(result[1]);
+        // Future<NearbyModel>? _nearby = NearbyApi.getNearByPlaces(0.0, 0.0);
+        // _nearby = fetchData(result[0], result[1]);
+      });
+      print(result);
+      // Handle the result as needed
+    } catch (error) {
+      // Handle errors appropriately
+      print("Error initializing data: $error");
+    }
+  }
 
   @override
   void dispose() {
@@ -252,6 +282,9 @@ class _MyHomePageState extends State<MyHomePage> {
                             weatherReportResult = weatherReportRes.toString();
                           } else {}
                           setState(() {
+                            lon = returndata[2][0];
+                            lat = returndata[2][1];
+                            fetchData();
                             selectedDates = dateTimeRange;
                           });
                         }
@@ -384,103 +417,102 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(
                   height: 220,
                   child: FutureBuilder(
-                      future: NearbyApi.getNearByPlaces(
-                          81.69405170700685, 16.77909917686155),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          return ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            scrollDirection: Axis.horizontal,
-                            itemCount: snapshot.data!.data.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              if (snapshot.data!.data[index].name != null) {
-                                return Card(
-                                  elevation: 4,
-                                  child: Container(
-                                    width: 170,
-                                    child: Column(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(5),
-                                            child: Image(
-                                              image: NetworkImage(snapshot
-                                                  .data!
-                                                  .data[index]
-                                                  .photo!
-                                                  .images!
-                                                  .medium!
-                                                  .url
-                                                  .toString()),
-                                              alignment: Alignment.center,
-                                              height: 150,
-                                              width: 200,
-                                              fit: BoxFit.cover,
+                    future: fetchData(),
+                    builder: (context, AsyncSnapshot snapshot) {
+                      if (snapshot.hasData) {
+                        return ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: snapshot.data!.data.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            if (snapshot.data!.data[index].name != null &&
+                                snapshot.data!.data[index].photo != null &&
+                                snapshot.data!.data[index].rating != null) {
+                              return Card(
+                                elevation: 4,
+                                child: Container(
+                                  width: 170,
+                                  child: Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(5),
+                                          child: Image(
+                                            image: NetworkImage(snapshot
+                                                .data!
+                                                .data[index]
+                                                .photo!
+                                                .images!
+                                                .medium!
+                                                .url
+                                                .toString()),
+                                            alignment: Alignment.center,
+                                            height: 150,
+                                            width: 200,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              snapshot.data!.data[index].name
+                                                      .toString() ??
+                                                  "text",
+                                              style: const TextStyle(
+                                                overflow: TextOverflow.ellipsis,
+                                                fontSize: 14,
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8),
-                                          child: Column(
-                                            children: [
-                                              Text(
-                                                snapshot.data!.data[index].name
-                                                        .toString() ??
-                                                    "text",
-                                                style: const TextStyle(
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  fontSize: 14,
+                                            const SizedBox(height: 5),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 15,
+                                                      child: Image.asset(
+                                                          'assets/images/star1.png'),
+                                                    ),
+                                                    const SizedBox(width: 5),
+                                                    Text(snapshot.data!
+                                                        .data[index].rating
+                                                        .toString()),
+                                                  ],
                                                 ),
-                                              ),
-                                              const SizedBox(
-                                                height: 5,
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      SizedBox(
-                                                        width: 15,
-                                                        child: Image.asset(
-                                                            'assets/images/star1.png'),
-                                                      ),
-                                                      const SizedBox(
-                                                        width: 5,
-                                                      ),
-                                                      Text(snapshot.data!
-                                                          .data[index].rating
-                                                          .toString()),
-                                                    ],
-                                                  ),
-                                                ],
-                                              )
-                                            ],
-                                          ),
+                                              ],
+                                            )
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                );
-                              }
-                            },
-                          );
-                        } else if (snapshot.hasError) {
-                          return const Text("error");
-                        } else if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else {
-                          return const Text("");
-                        }
-                      }),
+                                ),
+                              );
+                            }
+                          },
+                        );
+                      } else if (snapshot.hasError) {
+                        return const Text("error");
+                      } else if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else {
+                        return const Text("rrr");
+                      }
+                    },
+                  ),
+                  //NearbyPlacesWidget(
+                  //     //future: NearbyApi.getNearByPlaces(lon!, lat!),
+                  //     future: _nearby),
                 ),
                 const SizedBox(
                   height: 20,
@@ -500,9 +532,24 @@ class _MyHomePageState extends State<MyHomePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          customRadio("Bussiness", 1),
-                          customRadio("Family", 2),
-                          customRadio("Company", 3),
+                          CustomRadio(
+                            text: 'Business',
+                            index: 1, // or any index you want
+                            selectedTrip: _selectedTrip,
+                            onTap: _handleTap,
+                          ),
+                          CustomRadio(
+                            text: 'Family',
+                            index: 2, // or any index you want
+                            selectedTrip: _selectedTrip,
+                            onTap: _handleTap,
+                          ),
+                          CustomRadio(
+                            text: 'Company',
+                            index: 3, // or any index you want
+                            selectedTrip: _selectedTrip,
+                            onTap: _handleTap,
+                          )
                         ],
                       ),
                     ],

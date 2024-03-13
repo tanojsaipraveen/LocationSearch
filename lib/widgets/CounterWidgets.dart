@@ -61,13 +61,13 @@ class _CounterState extends State<Counter> {
               padding: const EdgeInsets.only(left: 20),
               child: Row(
                 children: [
-                  Icon(Icons.person),
-                  SizedBox(
+                  const Icon(Icons.person),
+                  const SizedBox(
                     width: 20,
                   ),
                   Text(
                     widget.header,
-                    style: TextStyle(fontSize: 18),
+                    style: const TextStyle(fontSize: 18),
                   ),
                 ],
               ),
@@ -86,20 +86,20 @@ class _CounterState extends State<Counter> {
                           ? Theme.of(context).primaryColor
                           : Colors.grey,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.remove,
                       color: Colors.white,
                       size: 30,
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 20,
                 ),
                 Text(_value.toString(),
-                    style:
-                        TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                SizedBox(
+                    style: const TextStyle(
+                        fontSize: 28, fontWeight: FontWeight.bold)),
+                const SizedBox(
                   width: 20,
                 ),
                 GestureDetector(
@@ -109,7 +109,7 @@ class _CounterState extends State<Counter> {
                       borderRadius: BorderRadius.circular(100),
                       color: Theme.of(context).primaryColor,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.add,
                       color: Colors.white,
                       size: 30,

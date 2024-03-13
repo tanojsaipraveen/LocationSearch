@@ -24,6 +24,13 @@ class NearbyModel {
       paging: json["paging"] == null ? null : Paging.fromJson(json["paging"]),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "data": data.map((x) => x?.toJson()).toList(),
+        "filters": filters?.toJson(),
+        "filters_v2": filtersV2?.toJson(),
+        "paging": paging?.toJson(),
+      };
 }
 
 class Datum {
@@ -224,6 +231,65 @@ class Datum {
       hours: json["hours"] == null ? null : Hours.fromJson(json["hours"]),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "location_id": locationId,
+        "name": name,
+        "latitude": latitude,
+        "longitude": longitude,
+        "num_reviews": numReviews,
+        "timezone": timezone,
+        "location_string": locationString,
+        "photo": photo?.toJson(),
+        "awards": awards.map((x) => x).toList(),
+        "location_subtype": locationSubtype,
+        "doubleclick_zone": doubleclickZone,
+        "preferred_map_engine": preferredMapEngine,
+        "raw_ranking": rawRanking,
+        "ranking_geo": rankingGeo,
+        "ranking_geo_id": rankingGeoId,
+        "ranking_position": rankingPosition,
+        "ranking_denominator": rankingDenominator,
+        "ranking_category": rankingCategory,
+        "ranking_subcategory": rankingSubcategory,
+        "subcategory_ranking": subcategoryRanking,
+        "ranking": ranking,
+        "distance": distance,
+        "distance_string": distanceString,
+        "bearing": bearing,
+        "rating": rating,
+        "is_closed": isClosed,
+        "is_long_closed": isLongClosed,
+        "ride_providers": rideProviders.map((x) => x).toList(),
+        "description": description,
+        "web_url": webUrl,
+        "write_review": writeReview,
+        "ancestors": ancestors.map((x) => x?.toJson()).toList(),
+        "category": category?.toJson(),
+        "subcategory": subcategory.map((x) => x?.toJson()).toList(),
+        "parent_display_name": parentDisplayName,
+        "is_jfy_enabled": isJfyEnabled,
+        "nearest_metro_station": nearestMetroStation.map((x) => x).toList(),
+        "website": website,
+        "address_obj": addressObj?.toJson(),
+        "address": address,
+        "is_candidate_for_contact_info_suppression":
+            isCandidateForContactInfoSuppression,
+        "subtype": subtype.map((x) => x?.toJson()).toList(),
+        "phone": phone,
+        "booking": booking?.toJson(),
+        "offer_group": offerGroup?.toJson(),
+        "animal_welfare_tag": animalWelfareTag?.toJson(),
+        "tags": tags?.toJson(),
+        "email": email,
+        "ad_position": adPosition,
+        "ad_size": adSize,
+        "detail": detail,
+        "page_type": pageType,
+        "mob_ptype": mobPtype,
+        "open_now_text": openNowText,
+        "hours": hours?.toJson(),
+      };
 }
 
 class AddressObj {
@@ -253,6 +319,15 @@ class AddressObj {
       postalcode: json["postalcode"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "street1": street1,
+        "street2": street2,
+        "city": city,
+        "state": state,
+        "country": country,
+        "postalcode": postalcode,
+      };
 }
 
 class Ancestor {
@@ -279,6 +354,13 @@ class Ancestor {
       locationId: json["location_id"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "subcategory": subcategory.map((x) => x?.toJson()).toList(),
+        "name": name,
+        "abbrv": abbrv,
+        "location_id": locationId,
+      };
 }
 
 class Category {
@@ -296,6 +378,11 @@ class Category {
       name: json["name"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "key": key,
+        "name": name,
+      };
 }
 
 class AnimalWelfareTag {
@@ -322,6 +409,14 @@ class AnimalWelfareTag {
       educationPortalUrl: json["education_portal_url"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "tag_text": tagText,
+        "msg_header": msgHeader,
+        "msg_body": msgBody,
+        "learn_more_text": learnMoreText,
+        "education_portal_url": educationPortalUrl,
+      };
 }
 
 class Booking {
@@ -339,6 +434,11 @@ class Booking {
       url: json["url"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "provider": provider,
+        "url": url,
+      };
 }
 
 class Hours {
@@ -360,6 +460,12 @@ class Hours {
       timezone: json["timezone"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "week_ranges":
+            weekRanges.map((x) => x.map((x) => x?.toJson()).toList()).toList(),
+        "timezone": timezone,
+      };
 }
 
 class WeekRange {
@@ -377,6 +483,11 @@ class WeekRange {
       closeTime: json["close_time"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "open_time": openTime,
+        "close_time": closeTime,
+      };
 }
 
 class OfferGroup {
@@ -403,6 +514,13 @@ class OfferGroup {
       isEligibleForApList: json["is_eligible_for_ap_list"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "lowest_price": lowestPrice,
+        "offer_list": offerList.map((x) => x?.toJson()).toList(),
+        "has_see_all_url": hasSeeAllUrl,
+        "is_eligible_for_ap_list": isEligibleForApList,
+      };
 }
 
 class OfferList {
@@ -444,6 +562,19 @@ class OfferList {
       primaryCategory: json["primary_category"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "url": url,
+        "price": price,
+        "rounded_up_price": roundedUpPrice,
+        "offer_type": offerType,
+        "title": title,
+        "product_code": productCode,
+        "partner": partner,
+        "image_url": imageUrl,
+        "description": description,
+        "primary_category": primaryCategory,
+      };
 }
 
 class Photo {
@@ -479,6 +610,17 @@ class Photo {
       user: json["user"] == null ? null : User.fromJson(json["user"]),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "images": images?.toJson(),
+        "is_blessed": isBlessed,
+        "uploaded_date": uploadedDate,
+        "caption": caption,
+        "id": id,
+        "helpful_votes": helpfulVotes,
+        "published_date": publishedDate,
+        "user": user?.toJson(),
+      };
 }
 
 class Images {
@@ -507,6 +649,14 @@ class Images {
       medium: json["medium"] == null ? null : Large.fromJson(json["medium"]),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "small": small?.toJson(),
+        "thumbnail": thumbnail?.toJson(),
+        "original": original?.toJson(),
+        "large": large?.toJson(),
+        "medium": medium?.toJson(),
+      };
 }
 
 class Large {
@@ -527,6 +677,12 @@ class Large {
       height: json["height"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "width": width,
+        "url": url,
+        "height": height,
+      };
 }
 
 class User {
@@ -547,6 +703,12 @@ class User {
       type: json["type"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "user_id": userId,
+        "member_id": memberId,
+        "type": type,
+      };
 }
 
 class Tags {
@@ -563,6 +725,10 @@ class Tags {
           : AnimalWelfareTag.fromJson(json["animal_welfare_tag"]),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "animal_welfare_tag": animalWelfareTag?.toJson(),
+      };
 }
 
 class Filters {
@@ -602,6 +768,21 @@ class Filters {
           : ExcludeLocations.fromJson(json["exclude_locations"]),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "distance": Map.from(distance)
+            .map((k, v) => MapEntry<String, dynamic>(k, v?.toJson())),
+        "subtype": Map.from(subtype)
+            .map((k, v) => MapEntry<String, dynamic>(k, v?.toJson())),
+        "min_rating": Map.from(minRating)
+            .map((k, v) => MapEntry<String, dynamic>(k, v?.toJson())),
+        "rating": rating?.toJson(),
+        "subcategory": Map.from(subcategory)
+            .map((k, v) => MapEntry<String, dynamic>(k, v?.toJson())),
+        "typeahead_tag": Map.from(typeaheadTag)
+            .map((k, v) => MapEntry<String, dynamic>(k, v?.toJson())),
+        "exclude_locations": excludeLocations?.toJson(),
+      };
 }
 
 class Distance {
@@ -631,6 +812,15 @@ class Distance {
       parentId: json["parent_id"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "count": count,
+        "label": label,
+        "priority": priority,
+        "selected": selected,
+        "locale_independent_label": localeIndependentLabel,
+        "parent_id": parentId,
+      };
 }
 
 class ExcludeLocations {
@@ -649,6 +839,11 @@ class ExcludeLocations {
       all: json["all"] == null ? null : All.fromJson(json["all"]),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "filtered": filtered?.toJson(),
+        "all": all?.toJson(),
+      };
 }
 
 class All {
@@ -666,6 +861,11 @@ class All {
       label: json["label"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "count": count,
+        "label": label,
+      };
 }
 
 class Rating {
@@ -695,6 +895,15 @@ class Rating {
       all: json["all"] == null ? null : Distance.fromJson(json["all"]),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "1": the1?.toJson(),
+        "2": the2?.toJson(),
+        "3": the3?.toJson(),
+        "4": the4?.toJson(),
+        "5": the5?.toJson(),
+        "all": all?.toJson(),
+      };
 }
 
 class FiltersV2 {
@@ -721,6 +930,12 @@ class FiltersV2 {
           json["metadata"] == null ? null : Metadata.fromJson(json["metadata"]),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "search_filters": searchFilters.map((x) => x).toList(),
+        "filter_sections": filterSections.map((x) => x?.toJson()).toList(),
+        "metadata": metadata?.toJson(),
+      };
 }
 
 class FilterSection {
@@ -747,6 +962,13 @@ class FilterSection {
       parentSectionId: json["parent_section_id"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "label": label,
+        "section_id": sectionId,
+        "filter_groups": filterGroups.map((x) => x?.toJson()).toList(),
+        "parent_section_id": parentSectionId,
+      };
 }
 
 class FilterGroup {
@@ -775,6 +997,14 @@ class FilterGroup {
           : List<Option>.from(json["options"]!.map((x) => Option.fromJson(x))),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "type": type,
+        "key": key,
+        "tracking_key": trackingKey,
+        "label": label,
+        "options": options.map((x) => x?.toJson()).toList(),
+      };
 }
 
 class Option {
@@ -807,6 +1037,16 @@ class Option {
       parentId: json["parent_id"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "label": label,
+        "value": value,
+        "selected": selected,
+        "default": optionDefault,
+        "single_select": singleSelect,
+        "count": count,
+        "parent_id": parentId,
+      };
 }
 
 class Metadata {
@@ -821,6 +1061,10 @@ class Metadata {
       sort: json["sort"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "sort": sort,
+      };
 }
 
 class Paging {
@@ -838,4 +1082,9 @@ class Paging {
       totalResults: json["total_results"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "results": results,
+        "total_results": totalResults,
+      };
 }

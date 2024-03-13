@@ -26,7 +26,19 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: Icon(
+              Icons.arrow_back,
+              color: Colors.black,
+              size: 28,
+            )),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -164,6 +176,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
                             padding: EdgeInsets.symmetric(
                                 horizontal: 0, vertical: 15),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap),
@@ -189,7 +202,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         },
                         child: Text(
                           "Signin Here",
-                          style: TextStyle(color: Colors.green),
+                          style:
+                              TextStyle(color: Theme.of(context).primaryColor),
                         ),
                       )
                     ],

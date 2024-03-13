@@ -30,7 +30,6 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    var re = GetLocationWeather.getDetails();
   }
 
   @override
@@ -141,9 +140,9 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => ForgotPasswordPage()));
                       },
-                      child: const Text(
+                      child: Text(
                         "Forgot Password?",
-                        style: TextStyle(color: Colors.green),
+                        style: TextStyle(color: Theme.of(context).primaryColor),
                       ),
                     ),
                   ),
@@ -154,6 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 0, vertical: 15),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap),
@@ -201,9 +201,10 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => RegisterPage()));
                         },
-                        child: const Text(
+                        child: Text(
                           "Create new account",
-                          style: TextStyle(color: Colors.green),
+                          style:
+                              TextStyle(color: Theme.of(context).primaryColor),
                         ),
                       )
                     ],

@@ -22,12 +22,14 @@ class GetLocationWeather {
       print(response.data['lon']);
 
       // Ensure data['lat'] and data['lon'] are strings before adding them to the list
-      if (response.data['lat'] is String && response.data['lon'] is String) {
-        String lat = response.data['lat'].toString();
-        String lon = response.data['lon'].toString();
-        res = [lat, lon];
+      if (response.data['lat'] != null && response.data['lon'] != null) {
+        res = [
+          response.data['lon'].toString(),
+          response.data['lat'].toString()
+        ];
       }
-
+      print("tanoj");
+      print(res);
       return res;
     } catch (e) {
       print("Error fetching weather report: $e");
@@ -39,7 +41,8 @@ class GetLocationWeather {
     List<String> res = [];
     try {
       String ip = await getipaddress();
-      return await getAddress(ip);
+      res = await getAddress(ip);
+      return res;
     } catch (e) {
       print("Error fetching weather report: $e");
       return res;
