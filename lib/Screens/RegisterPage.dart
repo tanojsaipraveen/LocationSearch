@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:locationsearch/Screens/LoginPage.dart';
@@ -23,6 +24,56 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool _isEmailValid = true;
   bool _passwordsMatch = true;
+
+  signUp() async {
+    try {
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              content: Text('Signup Success..'),
+            );
+          });
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => LoginPage()),
+          (Route<dynamic> route) => false);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        print('The password provided is too weak.');
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: Text('The password provided is too weak.'),
+              );
+            });
+      } else if (e.code == 'email-already-in-use') {
+        print('The account already exists for that email.');
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: Text('The account already exists for that email.'),
+              );
+            });
+      }
+    } catch (e) {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              content: Text(e.toString()),
+            );
+          });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,6 +127,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                     decoration: InputDecoration(
                       labelText: 'Enter your email',
+                      labelStyle:
+                          TextStyle(color: Theme.of(context).primaryColor),
                       errorText:
                           _isEmailValid ? null : 'Please enter a valid email',
                       border: OutlineInputBorder(
@@ -111,6 +164,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                     decoration: InputDecoration(
                       labelText: 'Enter your password',
+                      labelStyle:
+                          TextStyle(color: Theme.of(context).primaryColor),
                       errorText: _isPasswordValid
                           ? null
                           : 'Password requires at least one uppercase,lowercase letter,number and symbol.',
@@ -147,6 +202,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                     decoration: InputDecoration(
                       labelText: 'Re-enter your password',
+                      labelStyle:
+                          TextStyle(color: Theme.of(context).primaryColor),
                       errorText:
                           _passwordsMatch ? null : 'Passwords do not match',
                       border: OutlineInputBorder(
@@ -180,7 +237,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             padding: EdgeInsets.symmetric(
                                 horizontal: 0, vertical: 15),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                        onPressed: () {},
+                        onPressed: () {
+                          signUp();
+                        },
                         child: Text("SIGN UP")),
                   ),
                   SizedBox(

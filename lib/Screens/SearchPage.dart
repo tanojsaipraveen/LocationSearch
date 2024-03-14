@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:locationsearch/Models/LocationDataModel.dart' as locationdata;
 import 'package:locationsearch/Screens/SearchPage.dart';
@@ -43,8 +44,8 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<List<locationdata.LocationDataModel>> locationList(
       String address) async {
-    Response response = await Dio().get('https://photon.komoot.io/api/',
-        queryParameters: {'q': address, "limit": 10});
+    Response response = await Dio().get(dotenv.env['LocationEndpoint'] ?? "",
+        queryParameters: {'q': address, "limit": dotenv.env['LocationLimit']});
     final json = response.data;
     return (json['features'] as List)
         .map((e) => locationdata.LocationDataModel.fromJson(e))
@@ -99,14 +100,14 @@ class _SearchPageState extends State<SearchPage> {
                     suffixIcon: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Visibility(
-                            visible: _controller.text.isEmpty,
-                            child: IconButton(
-                                onPressed: () {
-                                  _controller.text = "";
-                                  setState(() {});
-                                },
-                                icon: const Icon(Icons.mic))),
+                        // Visibility(
+                        //     visible: _controller.text.isEmpty,
+                        //     child: IconButton(
+                        //         onPressed: () {
+                        //           _controller.text = "";
+                        //           setState(() {});
+                        //         },
+                        //         icon: const Icon(Icons.mic))),
                         Visibility(
                             visible: _controller.text.isNotEmpty,
                             child: IconButton(
@@ -119,6 +120,7 @@ class _SearchPageState extends State<SearchPage> {
                       ],
                     ),
                     filled: true,
+                    prefixIconColor: Theme.of(context).primaryColor,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(
                           10.0), // Adjust border radius here

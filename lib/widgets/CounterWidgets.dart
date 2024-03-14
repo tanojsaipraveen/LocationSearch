@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 class Counter extends StatefulWidget {
   final String header;
   final int initialValue;
-  final VoidCallback? onIncrement;
-  final VoidCallback? onDecrement;
+  final ValueChanged<int>? onValueChanged; // Callback function to emit value
 
   Counter({
     required this.header,
     required this.initialValue,
-    this.onIncrement,
-    this.onDecrement,
+    this.onValueChanged,
     required Icon icon,
   });
 
@@ -31,21 +29,19 @@ class _CounterState extends State<Counter> {
     setState(() {
       _value++;
     });
-    if (widget.onIncrement != null) {
-      widget.onIncrement!();
+    if (widget.onValueChanged != null) {
+      widget.onValueChanged!(_value); // Emit value on increment
     }
   }
 
   void _decrement() {
     setState(() {
-      if (_value < 1) {
-        _value = 0;
-      } else {
+      if (_value > 0) {
         _value--;
       }
     });
-    if (widget.onDecrement != null) {
-      widget.onDecrement!();
+    if (widget.onValueChanged != null) {
+      widget.onValueChanged!(_value); // Emit value on decrement
     }
   }
 

@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:locationsearch/Apis/GetLocationWeather.dart';
 import 'package:locationsearch/Screens/ForgotPasswordPage.dart';
 import 'package:locationsearch/Screens/HomePage.dart';
@@ -25,6 +27,69 @@ class _LoginPageState extends State<LoginPage> {
       RegExp(r'^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$&*])(?=.{8,})');
 
   bool _isPasswordValid = true;
+
+  login() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAuthentication? googleAuth =
+          await googleUser?.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => MyHomePage()),
+          (Route<dynamic> route) => false);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+      }
+    }
+  }
+
+  emaillogin() async {
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text, password: passwordController.text);
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => MyHomePage()),
+          (Route<dynamic> route) => false);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: Text('No user found for that email.'),
+              );
+            });
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: Text('Wrong password provided for that user.'),
+              );
+            });
+      } else {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: Text(e.message.toString()),
+              );
+            });
+      }
+    }
+
+    // await FirebaseAuth.instance.signInWithEmailAndPassword(
+    //     email: emailController.text, password: passwordController.text);
+  }
 
   @override
   void initState() {
@@ -72,6 +137,8 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     decoration: InputDecoration(
                       labelText: 'Enter your email',
+                      labelStyle:
+                          TextStyle(color: Theme.of(context).primaryColor),
                       errorText:
                           _isEmailValid ? null : 'Please enter a valid email',
                       border: OutlineInputBorder(
@@ -107,6 +174,8 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     decoration: InputDecoration(
                       labelText: 'Enter your password',
+                      labelStyle:
+                          TextStyle(color: Theme.of(context).primaryColor),
                       errorText: _isPasswordValid
                           ? null
                           : 'Password requires at least one uppercase,lowercase letter,number and symbol.',
@@ -158,14 +227,14 @@ class _LoginPageState extends State<LoginPage> {
                                 horizontal: 0, vertical: 15),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                         onPressed: () {
-                          Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                  builder: (context) => const MyHomePage()),
-                              (Route<dynamic> route) => false);
+                          // Navigator.of(context).pushAndRemoveUntil(
+                          //     MaterialPageRoute(
+                          //         builder: (context) => const MyHomePage()),
+                          //     (Route<dynamic> route) => false);
                           if (emailController.text.isNotEmpty &&
                               passwordController.text.isNotEmpty) {
                             if (_isEmailValid) {
-                              // Email is valid, perform your logic here
+                              emaillogin();
                               print('Valid Email: ${emailController.text}');
                               print("Success login");
                               // Navigator.of(context).pushAndRemoveUntil(
@@ -228,21 +297,23 @@ class _LoginPageState extends State<LoginPage> {
                     child: SignInButton(
                       Buttons.GoogleDark,
                       text: "Sign up with Google",
-                      onPressed: () {},
+                      onPressed: () {
+                        login();
+                      },
                     ),
                   ),
                   const SizedBox(
                     height: 20,
                   ),
-                  SizedBox(
-                    height: 45,
-                    width: double.infinity,
-                    child: SignInButton(
-                      Buttons.Facebook,
-                      text: "Sign up with Facebook",
-                      onPressed: () {},
-                    ),
-                  ),
+                  // SizedBox(
+                  //   height: 45,
+                  //   width: double.infinity,
+                  //   child: SignInButton(
+                  //     Buttons.Facebook,
+                  //     text: "Sign up with Facebook",
+                  //     onPressed: () {},
+                  //   ),
+                  // ),
 
                   // SizedBox(
                   //   width: double.infinity,
