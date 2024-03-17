@@ -310,6 +310,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:locationsearch/Screens/ForgotPasswordPage.dart';
@@ -381,6 +382,8 @@ class _LoginPageState extends State<LoginPage> {
                     const Divider(),
                     const SizedBox(height: 20),
                     _buildGoogleSignInButton(),
+                    const SizedBox(height: 20),
+                    _buildMicrosoftSignInButton(),
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -483,6 +486,18 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget _buildMicrosoftSignInButton() {
+    return SizedBox(
+      height: 45,
+      width: double.infinity,
+      child: SignInButton(
+        Buttons.Microsoft,
+        text: "Sign up with Microsoft",
+        onPressed: _signInWithMicrosoft,
+      ),
+    );
+  }
+
   void _signInWithEmail() async {
     try {
       final UserCredential userCredential =
@@ -522,5 +537,13 @@ class _LoginPageState extends State<LoginPage> {
         duration: const Duration(seconds: 5),
       ));
     }
+  }
+
+  void _signInWithMicrosoft() async {
+    try {
+      final provider = OAuthProvider("microsoft.com");
+      provider.setCustomParameters({"tenant": dotenv.env["Tenant"].toString()});
+      await FirebaseAuth.instance.signInWithProvider(provider);
+    } catch (e) {}
   }
 }

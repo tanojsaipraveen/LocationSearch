@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:location/location.dart';
+import 'package:locationsearch/Apis/LocationCoordinate.dart';
 import 'package:locationsearch/Apis/NearbyApi.dart';
 import 'package:locationsearch/Apis/WeatherApi.dart';
 import 'package:locationsearch/Controllers/DataController.dart';
@@ -76,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
       lon = returndata[2][0];
       lat = returndata[2][1];
       isIntial = false;
-      fetchData(isIntial);
+      fetchData(isIntial, lon, lat);
       selectedDates = dateTimeRange;
     });
   }
@@ -138,6 +139,11 @@ class _MyHomePageState extends State<MyHomePage> {
   //   }
   // }
 
+  Future<List<String>> getlocationdetails() async {
+    LoactionCoordinate loactionCoordinate = LoactionCoordinate();
+    return await loactionCoordinate.fetchLocationData();
+  }
+
   Future addDetails(location, datefrom, dateto, triptype, men, women, children,
       activities) async {
     try {
@@ -173,21 +179,22 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<NearbyModel>? fetchData(isIntial) async {
-    setState(() {});
+  Future<NearbyModel>? fetchData(isIntial, lon1, lat1) async {
+    // setState(() {});
     // return await NearbyApi.getNearByPlaces(lon!, lat!);
     if (!isIntial) {
       return await NearbyApi.getNearByPlaces(
           dataControllerVariable.longitude.value,
           dataControllerVariable.latitude.value);
     } else {
-      if (dataControllerVariable.longitude.value != 0.0) {
-        return await NearbyApi.getNearByPlaces(
-            dataControllerVariable.longitude.value,
-            dataControllerVariable.latitude.value);
-      } else {
-        return await NearbyApi.getNearByPlaces(lon!, lat!);
-      }
+      // if (dataControllerVariable.longitude.value != 0.0) {
+      //   return await NearbyApi.getNearByPlaces(
+      //       dataControllerVariable.longitude.value,
+      //       dataControllerVariable.latitude.value);
+      // } else {
+      return await NearbyApi.getNearByPlaces(
+          double.parse(lon1!), double.parse(lat1!));
+      //}
     }
   }
 
@@ -521,126 +528,165 @@ class _MyHomePageState extends State<MyHomePage> {
                   SizedBox(
                       height: 220,
                       child: FutureBuilder(
-                        future: fetchData(isIntial),
-                        builder: (context, AsyncSnapshot snapshot) {
-                          if (snapshot.hasData) {
-                            return ListView.builder(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              scrollDirection: Axis.horizontal,
-                              itemCount: snapshot.data!.data.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                if (snapshot.data!.data[index].name != null &&
-                                    snapshot.data!.data[index].photo != null &&
-                                    snapshot.data!.data[index].rating != null) {
-                                  return GestureDetector(
-                                    onTap: () {
-                                      Navigator.of(context)
-                                          .push(MaterialPageRoute(
-                                        builder: (context) => PlacePage(
-                                          // placeLocationModel: snapshot
-                                          //     .data!.data[index],
-                                          name: snapshot.data!.data[index].name,
-                                          image: snapshot.data!.data[index]
-                                              .photo.images.original.url,
-                                          address: snapshot
-                                              .data!.data[index].address,
-
-                                          latitude: snapshot
-                                              .data!.data[index].latitude,
-                                          longitude: snapshot
-                                              .data!.data[index].longitude,
-                                          rating:
-                                              snapshot.data!.data[index].rating,
-                                          description: snapshot
-                                              .data!.data[index].description,
-                                        ),
-                                      ));
-                                    },
-                                    child: Card(
-                                      elevation: 4,
-                                      child: SizedBox(
-                                        width: 170,
-                                        child: Column(
-                                          children: [
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.all(0.0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(5),
-                                                child: Image(
-                                                  image: NetworkImage(snapshot
+                          future: getlocationdetails(),
+                          builder: (context, AsyncSnapshot snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              // While waiting for data, show a loading indicator
+                              return Center(child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              // If there's an error fetching parameters, display the error message
+                              return Center(
+                                  child: Text('Error: ${snapshot.error}'));
+                            } else {
+                              final parameters = snapshot.data;
+                              return FutureBuilder(
+                                future: fetchData(
+                                    isIntial, parameters[0], parameters[1]),
+                                builder: (context, AsyncSnapshot snapshot) {
+                                  if (snapshot.hasData) {
+                                    return ListView.builder(
+                                      physics:
+                                          const AlwaysScrollableScrollPhysics(),
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: snapshot.data!.data.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        if (snapshot.data!.data[index].name !=
+                                                null &&
+                                            snapshot.data!.data[index].photo !=
+                                                null &&
+                                            snapshot.data!.data[index].rating !=
+                                                null) {
+                                          return GestureDetector(
+                                            onTap: () {
+                                              Navigator.of(context)
+                                                  .push(MaterialPageRoute(
+                                                builder: (context) => PlacePage(
+                                                  // placeLocationModel: snapshot
+                                                  //     .data!.data[index],
+                                                  name: snapshot
+                                                      .data!.data[index].name,
+                                                  image: snapshot
                                                       .data!
                                                       .data[index]
-                                                      .photo!
-                                                      .images!
-                                                      .medium!
-                                                      .url
-                                                      .toString()),
-                                                  alignment: Alignment.center,
-                                                  height: 150,
-                                                  width: 200,
-                                                  fit: BoxFit.cover,
+                                                      .photo
+                                                      .images
+                                                      .original
+                                                      .url,
+                                                  address: snapshot.data!
+                                                      .data[index].address,
+
+                                                  latitude: snapshot.data!
+                                                      .data[index].latitude,
+                                                  longitude: snapshot.data!
+                                                      .data[index].longitude,
+                                                  rating: snapshot
+                                                      .data!.data[index].rating,
+                                                  description: snapshot.data!
+                                                      .data[index].description,
+                                                ),
+                                              ));
+                                            },
+                                            child: Card(
+                                              elevation: 4,
+                                              child: SizedBox(
+                                                width: 170,
+                                                child: Column(
+                                                  children: [
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              0.0),
+                                                      child: ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(5),
+                                                        child: Image(
+                                                          image: NetworkImage(
+                                                              snapshot
+                                                                  .data!
+                                                                  .data[index]
+                                                                  .photo!
+                                                                  .images!
+                                                                  .medium!
+                                                                  .url
+                                                                  .toString()),
+                                                          alignment:
+                                                              Alignment.center,
+                                                          height: 150,
+                                                          width: 200,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 8),
+                                                      child: Column(
+                                                        children: [
+                                                          Align(
+                                                            alignment: Alignment
+                                                                .centerLeft,
+                                                            child: Text(
+                                                              snapshot
+                                                                  .data!
+                                                                  .data[index]
+                                                                  .name
+                                                                  .toString(),
+                                                              style:
+                                                                  const TextStyle(
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                                fontSize: 14,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 5),
+                                                          Row(
+                                                            children: [
+                                                              SizedBox(
+                                                                width: 15,
+                                                                child: Image.asset(
+                                                                    'assets/images/star1.png'),
+                                                              ),
+                                                              const SizedBox(
+                                                                  width: 5),
+                                                              Text(snapshot
+                                                                  .data!
+                                                                  .data[index]
+                                                                  .rating
+                                                                  .toString()),
+                                                            ],
+                                                          )
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 8),
-                                              child: Column(
-                                                children: [
-                                                  Align(
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    child: Text(
-                                                      snapshot.data!.data[index]
-                                                          .name
-                                                          .toString(),
-                                                      style: const TextStyle(
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        fontSize: 14,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 5),
-                                                  Row(
-                                                    children: [
-                                                      SizedBox(
-                                                        width: 15,
-                                                        child: Image.asset(
-                                                            'assets/images/star1.png'),
-                                                      ),
-                                                      const SizedBox(width: 5),
-                                                      Text(snapshot.data!
-                                                          .data[index].rating
-                                                          .toString()),
-                                                    ],
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                            );
-                          } else if (snapshot.hasError) {
-                            return const Text("");
-                          } else if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          } else {
-                            return const Text("rrr");
-                          }
-                        },
-                      )),
+                                          );
+                                        }
+                                      },
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    return const Text("");
+                                  } else if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Center(
+                                        child: CircularProgressIndicator());
+                                  } else {
+                                    return const Text("rrr");
+                                  }
+                                },
+                              );
+                            }
+                          })),
                   const SizedBox(
                     height: 20,
                   ),
