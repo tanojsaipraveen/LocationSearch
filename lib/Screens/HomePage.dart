@@ -2,20 +2,23 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:locationsearch/Apis/GetLocationWeather.dart';
+import 'package:get/get.dart';
+import 'package:location/location.dart';
 import 'package:locationsearch/Apis/NearbyApi.dart';
 import 'package:locationsearch/Apis/WeatherApi.dart';
+import 'package:locationsearch/Controllers/DataController.dart';
 import 'package:locationsearch/DB/LocalRepo.dart';
 import 'package:locationsearch/Helpers/HelperMethods.dart';
 import 'package:locationsearch/Models/LocationDataModel.dart' as locationdata;
 import 'package:locationsearch/Models/NearByModel.dart';
+import 'package:locationsearch/Screens/PlacePage.dart';
 import 'package:locationsearch/Screens/SearchPage.dart';
 import 'package:locationsearch/Screens/SettingsPage.dart';
 import 'package:locationsearch/widgets/CounterWidgets.dart';
 import 'package:locationsearch/widgets/CustomRadio.dart';
 import 'package:locationsearch/widgets/TravelActivitySelector.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:toastification/toastification.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key});
@@ -25,6 +28,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  DataController dataController = Get.put(DataController());
+  DataController dataControllerVariable = Get.find<DataController>();
+  Location location = new Location();
+  late bool _serviceEnabled;
+  late PermissionStatus _permissionGranted;
+  late LocationData _locationData;
   final user = FirebaseAuth.instance.currentUser;
   List<locationdata.LocationDataModel> items = [];
   dynamic returndata;
@@ -38,10 +47,14 @@ class _MyHomePageState extends State<MyHomePage> {
   int _selectedTrip = 0;
   Future<NearbyModel>? _nearby;
   List<String> selectedActivitie = [];
+  //var _currentWeather = 0.obs;
+  var currentWeather = 0.obs;
+  var count = 0.obs;
 
   String men = "0";
   String women = "0";
   String childern = "0";
+  bool isIntial = true;
 
   final List<String> travelActivities = [
     'Sightseeing',
@@ -54,6 +67,29 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counterValue1 = 0;
   int _counterValue2 = 0;
   int _counterValue3 = 0;
+  void _isDataAviable() {
+    setState(() => isDataAviable = true);
+  }
+
+  void fetchdataloc(dateTimeRange) {
+    setState(() {
+      lon = returndata[2][0];
+      lat = returndata[2][1];
+      isIntial = false;
+      fetchData(isIntial);
+      selectedDates = dateTimeRange;
+    });
+  }
+
+  void simpleSetState() {
+    setState(() {});
+  }
+
+  void _selectedActivity(selectedActivities) {
+    setState(() {
+      selectedActivitie = selectedActivities;
+    });
+  }
 
   void _handleCounter1ValueChanged(int value) {
     setState(() {
@@ -88,12 +124,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
-    // lon = 109.262909;
-    // lat = 12.346705;
-    _initializeData();
+    // _initializeData();
     super.initState();
+    dataController.getLocation();
   }
+
+  // Future<void> _getLocation() async {
+  //   final permissionStatus = await location.hasPermission();
+  //   if (permissionStatus == PermissionStatus.granted) {
+  //     _getLocationData();
+  //   } else {
+  //     _fetchWeatherByIP();
+  //   }
+  // }
 
   Future addDetails(location, datefrom, dateto, triptype, men, women, children,
       activities) async {
@@ -112,51 +155,44 @@ class _MyHomePageState extends State<MyHomePage> {
         'Children': children,
         'Activities': activities
       });
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: Text('Trip Deatils Saved'),
-            );
-          });
+      toastification.show(
+        context: context,
+        alignment: Alignment.center,
+        type: ToastificationType.success,
+        title: const Text('Trip Deatils Saved'),
+        autoCloseDuration: const Duration(seconds: 5),
+      );
     } on FirebaseException catch (e) {
-      print(e.message.toString());
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: Text(e.message.toString()),
-            );
-          });
+      toastification.show(
+        context: context,
+        alignment: Alignment.center,
+        type: ToastificationType.error,
+        title: Text(e.message.toString()),
+        autoCloseDuration: const Duration(seconds: 5),
+      );
     }
   }
 
-  Future<NearbyModel>? fetchData() async {
-    // Simulate fetching data from an API
-    return await NearbyApi.getNearByPlaces(lon!, lat!);
-  }
-
-  Future<void> _initializeData() async {
-    try {
-      var result = await GetLocationWeather.getDetails();
-
-      setState(() {
-        lon = double.parse(result[0]);
-        lat = double.parse(result[1]);
-        // Future<NearbyModel>? _nearby = NearbyApi.getNearByPlaces(0.0, 0.0);
-        // _nearby = fetchData(result[0], result[1]);
-      });
-      print(result);
-      // Handle the result as needed
-    } catch (error) {
-      // Handle errors appropriately
-      print("Error initializing data: $error");
+  Future<NearbyModel>? fetchData(isIntial) async {
+    setState(() {});
+    // return await NearbyApi.getNearByPlaces(lon!, lat!);
+    if (!isIntial) {
+      return await NearbyApi.getNearByPlaces(
+          dataControllerVariable.longitude.value,
+          dataControllerVariable.latitude.value);
+    } else {
+      if (dataControllerVariable.longitude.value != 0.0) {
+        return await NearbyApi.getNearByPlaces(
+            dataControllerVariable.longitude.value,
+            dataControllerVariable.latitude.value);
+      } else {
+        return await NearbyApi.getNearByPlaces(lon!, lat!);
+      }
     }
   }
 
   @override
   void dispose() {
-    // Dispose the controller when the widget is disposed
     _controller.dispose();
     super.dispose();
   }
@@ -183,40 +219,47 @@ class _MyHomePageState extends State<MyHomePage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 "Welcome",
                                 style: TextStyle(
                                   fontSize: 35,
                                 ),
                               ),
-                              Text(
-                                // user!.email ?? "Guest",
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5),
+                                child: Text(
+                                  // user!.email ?? "Guest",
 
-                                user!.displayName != null &&
-                                        user!.displayName != ""
-                                    ? user!.displayName!
-                                    : user!.email!,
-                                style:
-                                    TextStyle(fontSize: 14, color: Colors.grey),
+                                  user!.displayName != null &&
+                                          user!.displayName != ""
+                                      ? user!.displayName!
+                                      : user!.email!,
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.grey[600]),
+                                ),
                               ),
                             ],
                           ),
-                          Column(
-                            children: [
-                              SizedBox(
-                                  width: 30,
-                                  child:
-                                      Image.asset("assets/images/cloudy.png")),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              const Text(
-                                "25° C",
-                                style: TextStyle(
-                                    color: Colors.black, fontSize: 24),
-                              ),
-                            ],
-                          )
+                          Obx(() => Visibility(
+                                visible: dataController.isVisible.value,
+                                child: Column(
+                                  children: [
+                                    SizedBox(
+                                        width: 30,
+                                        child: Image.asset(
+                                            "assets/images/cloudy.png")),
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    Obx(() => Text(
+                                        "${dataController.currentWeather}°C",
+                                        style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.w400)))
+                                  ],
+                                ),
+                              )),
                         ],
                       ),
                       Padding(
@@ -237,9 +280,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               if (data != null) {
                                 _controller.text = data[0];
                                 returndata = data;
-                                setState(() {
-                                  isDataAviable = true;
-                                });
+                                _isDataAviable();
                                 LocalRepo.insertRecentSearch(data);
                               }
                             },
@@ -262,28 +303,20 @@ class _MyHomePageState extends State<MyHomePage> {
                                           onPressed: () {
                                             _controller.text = "";
                                             items.clear();
-                                            setState(() {});
+                                            simpleSetState();
                                           },
                                           icon: const Icon(Icons.close))),
-                                  // Visibility(
-                                  //     visible: _controller.text.isEmpty,
-                                  //     child: IconButton(
-                                  //         onPressed: () {
-                                  //           _controller.text = "";
-                                  //           setState(() {});
-                                  //         },
-                                  //         icon: const Icon(Icons.mic))),
                                   Visibility(
                                       visible: _controller.text.isEmpty,
                                       child: Padding(
-                                        padding:
-                                            EdgeInsets.only(right: 10, left: 5),
+                                        padding: const EdgeInsets.only(
+                                            right: 10, left: 5),
                                         child: GestureDetector(
                                           onTap: () {
                                             Navigator.of(context).push(
                                                 MaterialPageRoute(
                                                     builder: (context) =>
-                                                        SettingsPage()));
+                                                        const SettingsPage()));
                                           },
                                           child: CircleAvatar(
                                             radius: 16,
@@ -294,7 +327,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                                         user!.photoURL != ""
                                                     ? NetworkImage(
                                                         user!.photoURL!)
-                                                    : AssetImage(
+                                                    : const AssetImage(
                                                             'assets/images/profile.jpg')
                                                         as ImageProvider,
                                           ),
@@ -338,19 +371,13 @@ class _MyHomePageState extends State<MyHomePage> {
                           final DateTimeRange? dateTimeRange =
                               await showDateRangePicker(
                                   context: context,
-                                  firstDate: DateTime(today.year, 1, 1),
+                                  firstDate: DateTime.now(),
                                   lastDate: DateTime(today.year, 12, 31));
                           if (dateTimeRange != null) {
-                            String formatedStartDate = start.year.toString() +
-                                "/" +
-                                start.month.toString() +
-                                "/" +
-                                start.day.toString();
-                            String formatedEndDate = end.year.toString() +
-                                "/" +
-                                end.month.toString() +
-                                "/" +
-                                end.day.toString();
+                            String formatedStartDate =
+                                "${start.year}/${start.month}/${start.day}";
+                            String formatedEndDate =
+                                "${end.year}/${end.month}/${end.day}";
                             var weatherReportRes =
                                 await WeatherApi.getWeatherReport(
                                     returndata[2][0],
@@ -362,12 +389,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               isResultAviable = true;
                               weatherReportResult = weatherReportRes.toString();
                             } else {}
-                            setState(() {
-                              lon = returndata[2][0];
-                              lat = returndata[2][1];
-                              fetchData();
-                              selectedDates = dateTimeRange;
-                            });
+                            fetchdataloc(dateTimeRange);
                           }
                         },
                         child: Container(
@@ -497,67 +519,93 @@ class _MyHomePageState extends State<MyHomePage> {
                     height: 10,
                   ),
                   SizedBox(
-                    height: 220,
-                    child: FutureBuilder(
-                      future: fetchData(),
-                      builder: (context, AsyncSnapshot snapshot) {
-                        if (snapshot.hasData) {
-                          return ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            scrollDirection: Axis.horizontal,
-                            itemCount: snapshot.data!.data.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              if (snapshot.data!.data[index].name != null &&
-                                  snapshot.data!.data[index].photo != null &&
-                                  snapshot.data!.data[index].rating != null) {
-                                return Card(
-                                  elevation: 4,
-                                  child: Container(
-                                    width: 170,
-                                    child: Column(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(5),
-                                            child: Image(
-                                              image: NetworkImage(snapshot
-                                                  .data!
-                                                  .data[index]
-                                                  .photo!
-                                                  .images!
-                                                  .medium!
-                                                  .url
-                                                  .toString()),
-                                              alignment: Alignment.center,
-                                              height: 150,
-                                              width: 200,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
+                      height: 220,
+                      child: FutureBuilder(
+                        future: fetchData(isIntial),
+                        builder: (context, AsyncSnapshot snapshot) {
+                          if (snapshot.hasData) {
+                            return ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              scrollDirection: Axis.horizontal,
+                              itemCount: snapshot.data!.data.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                if (snapshot.data!.data[index].name != null &&
+                                    snapshot.data!.data[index].photo != null &&
+                                    snapshot.data!.data[index].rating != null) {
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                        builder: (context) => PlacePage(
+                                          // placeLocationModel: snapshot
+                                          //     .data!.data[index],
+                                          name: snapshot.data!.data[index].name,
+                                          image: snapshot.data!.data[index]
+                                              .photo.images.original.url,
+                                          address: snapshot
+                                              .data!.data[index].address,
+
+                                          latitude: snapshot
+                                              .data!.data[index].latitude,
+                                          longitude: snapshot
+                                              .data!.data[index].longitude,
+                                          rating:
+                                              snapshot.data!.data[index].rating,
+                                          description: snapshot
+                                              .data!.data[index].description,
                                         ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8),
-                                          child: Column(
-                                            children: [
-                                              Text(
-                                                snapshot.data!.data[index].name
-                                                        .toString() ??
-                                                    "text",
-                                                style: const TextStyle(
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  fontSize: 14,
+                                      ));
+                                    },
+                                    child: Card(
+                                      elevation: 4,
+                                      child: SizedBox(
+                                        width: 170,
+                                        child: Column(
+                                          children: [
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.all(0.0),
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(5),
+                                                child: Image(
+                                                  image: NetworkImage(snapshot
+                                                      .data!
+                                                      .data[index]
+                                                      .photo!
+                                                      .images!
+                                                      .medium!
+                                                      .url
+                                                      .toString()),
+                                                  alignment: Alignment.center,
+                                                  height: 150,
+                                                  width: 200,
+                                                  fit: BoxFit.cover,
                                                 ),
                                               ),
-                                              const SizedBox(height: 5),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
+                                            ),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 8),
+                                              child: Column(
                                                 children: [
+                                                  Align(
+                                                    alignment:
+                                                        Alignment.centerLeft,
+                                                    child: Text(
+                                                      snapshot.data!.data[index]
+                                                          .name
+                                                          .toString(),
+                                                      style: const TextStyle(
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 5),
                                                   Row(
                                                     children: [
                                                       SizedBox(
@@ -570,34 +618,29 @@ class _MyHomePageState extends State<MyHomePage> {
                                                           .data[index].rating
                                                           .toString()),
                                                     ],
-                                                  ),
+                                                  )
                                                 ],
-                                              )
-                                            ],
-                                          ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }
-                            },
-                          );
-                        } else if (snapshot.hasError) {
-                          return const Text("");
-                        } else if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else {
-                          return const Text("rrr");
-                        }
-                      },
-                    ),
-                    //NearbyPlacesWidget(
-                    //     //future: NearbyApi.getNearByPlaces(lon!, lat!),
-                    //     future: _nearby),
-                  ),
+                                  );
+                                }
+                              },
+                            );
+                          } else if (snapshot.hasError) {
+                            return const Text("");
+                          } else if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else {
+                            return const Text("rrr");
+                          }
+                        },
+                      )),
                   const SizedBox(
                     height: 20,
                   ),
@@ -642,7 +685,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   const SizedBox(
                     height: 20,
                   ),
-                  Align(
+                  const Align(
                     alignment: Alignment.topLeft,
                     child: Text(
                       "Members",
@@ -656,30 +699,33 @@ class _MyHomePageState extends State<MyHomePage> {
                     header: 'Men',
                     initialValue: _counterValue1,
                     onValueChanged: _handleCounter1ValueChanged,
-                    icon: Icon(Icons.person), // You can pass the icon here
+                    icon:
+                        const Icon(Icons.person), // You can pass the icon here
                   ),
-                  Divider(
+                  const Divider(
                     height: 20,
                   ),
                   Counter(
                     header: 'Women',
                     initialValue: _counterValue2,
                     onValueChanged: _handleCounter2ValueChanged,
-                    icon: Icon(Icons.person), // You can pass the icon here
+                    icon:
+                        const Icon(Icons.person), // You can pass the icon here
                   ),
-                  Divider(
+                  const Divider(
                     height: 20,
                   ),
                   Counter(
                     header: 'Children',
                     initialValue: _counterValue3,
                     onValueChanged: _handleCounter3ValueChanged,
-                    icon: Icon(Icons.person), // You can pass the icon here
+                    icon:
+                        const Icon(Icons.person), // You can pass the icon here
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
-                  Align(
+                  const Align(
                     alignment: Alignment.topLeft,
                     child: Text(
                       "Activities",
@@ -692,45 +738,42 @@ class _MyHomePageState extends State<MyHomePage> {
                   TravelActivitySelector(
                     travelActivities: travelActivities,
                     onSelectionChanged: (selectedActivities) {
-                      setState(() {
-                        selectedActivitie = selectedActivities;
-                      });
-                      print(selectedActivities);
+                      _selectedActivity(selectedActivities);
                     },
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   )
                 ],
               ),
             ),
           ),
-          floatingActionButton: FloatingActionButton(
-            // isExtended: true,
-            child: Icon(Icons.save),
-            backgroundColor: Theme.of(context).primaryColor,
-            onPressed: () {
-              String triptype = "";
-              if (_selectedTrip == 1) {
-                triptype = 'Business';
-              } else if (_selectedTrip == 2) {
-                triptype = 'Family';
-              } else {
-                triptype = 'Company';
-              }
-              addDetails(
-                  _controller.text.trim(),
-                  start,
-                  end,
-                  triptype,
-                  _counterValue1,
-                  _counterValue2,
-                  _counterValue3,
-                  selectedActivitie);
-              // setState(() {
-              //   i++;
-              // });
-            },
+          floatingActionButton: Visibility(
+            visible: isResultAviable,
+            child: FloatingActionButton(
+              // isExtended: true,
+              child: const Icon(Icons.save),
+              backgroundColor: Theme.of(context).primaryColor,
+              onPressed: () {
+                String triptype = "";
+                if (_selectedTrip == 1) {
+                  triptype = 'Business';
+                } else if (_selectedTrip == 2) {
+                  triptype = 'Family';
+                } else {
+                  triptype = 'Company';
+                }
+                addDetails(
+                    _controller.text.trim(),
+                    start,
+                    end,
+                    triptype,
+                    _counterValue1,
+                    _counterValue2,
+                    _counterValue3,
+                    selectedActivitie);
+              },
+            ),
           )),
     );
   }

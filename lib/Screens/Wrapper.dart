@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:location/location.dart';
 import 'package:locationsearch/Screens/HomePage.dart';
 import 'package:locationsearch/Screens/LoginPage.dart';
 
@@ -11,6 +12,39 @@ class Wrapper extends StatefulWidget {
 }
 
 class _WrapperState extends State<Wrapper> {
+  Location location = new Location();
+  late bool _serviceEnabled;
+  late PermissionStatus _permissionGranted;
+  late LocationData _locationData;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    initilization();
+  }
+
+  initilization() async {
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    // _permissionGranted = await location.hasPermission();
+    // if (_permissionGranted == PermissionStatus.denied) {
+    //   _permissionGranted = await location.requestPermission();
+    //   if (_permissionGranted != PermissionStatus.granted) {
+    //     // return;
+    //   }
+    // }
+    // _locationData = await location.getLocation();
+    // print(_locationData.latitude);
+    // print(_locationData.longitude);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

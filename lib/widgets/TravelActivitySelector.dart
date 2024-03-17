@@ -30,6 +30,7 @@ class _TravelActivitySelectorState extends State<TravelActivitySelector> {
   @override
   Widget build(BuildContext context) {
     return Wrap(
+      alignment: WrapAlignment.start,
       spacing: 8.0,
       runSpacing: 0.0,
       children: List<Widget>.generate(

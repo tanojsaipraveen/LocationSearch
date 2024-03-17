@@ -76,11 +76,9 @@ class _SearchPageState extends State<SearchPage> {
                     _timer1?.cancel();
                     _timer1 = Timer(const Duration(milliseconds: 0), () {
                       if (val.isEmpty) {
-                        // Clear the list when the text field is empty
                         items.clear();
                         setState(() {});
                       } else {
-                        // Cancel the previous timer if there is any
                         _timer?.cancel();
                         // Start a new timer
                         _timer = Timer(const Duration(milliseconds: 0), () {
@@ -100,14 +98,6 @@ class _SearchPageState extends State<SearchPage> {
                     suffixIcon: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Visibility(
-                        //     visible: _controller.text.isEmpty,
-                        //     child: IconButton(
-                        //         onPressed: () {
-                        //           _controller.text = "";
-                        //           setState(() {});
-                        //         },
-                        //         icon: const Icon(Icons.mic))),
                         Visibility(
                             visible: _controller.text.isNotEmpty,
                             child: IconButton(
@@ -179,7 +169,6 @@ class _SearchPageState extends State<SearchPage> {
                                   },
                                   icon: const Icon(Icons.arrow_outward))),
                           onTap: () {
-                            print(e.properties!.name);
                             _controller.text = e.properties!.name.toString();
                             items.clear();
                             Navigator.pop(context, [

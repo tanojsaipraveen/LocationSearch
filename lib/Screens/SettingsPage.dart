@@ -29,7 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
             onPressed: () {
               Navigator.of(context).pop();
             },
-            icon: Icon(
+            icon: const Icon(
               Icons.arrow_back,
               color: Colors.black,
               size: 28,
@@ -38,35 +38,31 @@ class _SettingsPageState extends State<SettingsPage> {
       body: SettingsList(
         sections: [
           SettingsSection(
-            title: Text('General'),
+            title: const Text('General'),
             tiles: [
               SettingsTile.navigation(
-                title: Text('Saved Trips'),
-                leading: Icon(Icons.save),
-                description: Text('You can see saved trips'),
+                title: const Text('Saved Trips'),
+                leading: const Icon(Icons.save),
+                description: const Text('You can see saved trips'),
                 onPressed: (context) {
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => SavedTripdPage()));
+                      builder: (context) => const SavedTripsPage()));
                 },
               )
             ],
           ),
           SettingsSection(
-            title: Text('Profile'),
+            title: const Text('Profile'),
             tiles: [
               SettingsTile.navigation(
-                leading: Icon(Icons.logout),
-                title: Text('Logout'),
+                leading: const Icon(Icons.logout),
+                title: const Text('Logout'),
                 onPressed: (context) {
                   signout();
                   Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => LoginPage()),
+                      MaterialPageRoute(
+                          builder: (context) => const LoginPage()),
                       (Route<dynamic> route) => false);
-                  // Navigation.navigateTo(
-                  //   context: context,
-                  //   screen: AndroidSettingsScreen(),
-                  //   style: NavigationRouteStyle.material,
-                  // );
                 },
               ),
             ],

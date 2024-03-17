@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:toastification/toastification.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -20,21 +21,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     try {
       await FirebaseAuth.instance
           .sendPasswordResetEmail(email: emailController.text.trim());
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: Text('Password reset link sent! Check your email'),
-            );
-          });
+      toastification.show(
+        context: context,
+        alignment: Alignment.center,
+        type: ToastificationType.success,
+        title: const Text('Password reset link sent! Check your email'),
+        autoCloseDuration: const Duration(seconds: 5),
+      );
     } on FirebaseAuthException catch (e) {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: Text(e.message.toString()),
-            );
-          });
+      toastification.show(
+        context: context,
+        alignment: Alignment.center,
+        type: ToastificationType.error,
+        title: Text(e.message.toString()),
+        autoCloseDuration: const Duration(seconds: 5),
+      );
     }
   }
 
@@ -118,10 +119,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                       onPressed: () {
                         sendPasswordResetMail();
-                        // Navigator.of(context).pushAndRemoveUntil(
-                        //     MaterialPageRoute(
-                        //         builder: (context) => const MyHomePage()),
-                        //     (Route<dynamic> route) => false);
                       },
                       child: const Text("RESET PASSWORD")),
                 ),

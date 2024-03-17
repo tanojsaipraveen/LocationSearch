@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:locationsearch/Screens/LoginPage.dart';
 import 'package:locationsearch/Screens/Wrapper.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
@@ -18,7 +18,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Platform.isAndroid
       ? await Firebase.initializeApp(
-          options: FirebaseOptions(
+          options: const FirebaseOptions(
             apiKey: "AIzaSyBxDqdOj1yxWd60zK3bJzOVkzsaEO6Eb_k",
             appId: "1:822565429375:android:8fe67966f394a2b22c5f4a",
             messagingSenderId: "822565429375",
@@ -39,6 +39,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: Colors.blueGrey,
+        primarySwatch: Colors.blueGrey,
+        textTheme: GoogleFonts.openSansTextTheme(),
         // colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: false,
         textSelectionTheme:

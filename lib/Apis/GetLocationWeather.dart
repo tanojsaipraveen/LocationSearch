@@ -1,15 +1,14 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GetLocationWeather {
   static Future<String> getipaddress() async {
     try {
-      Response response = await Dio().get('https://api.ipify.org');
-      print(response.data);
+      Response response = await Dio().get(dotenv.env['GetIpEndPoint']!);
       return response.data;
     } catch (e) {
-      print("Error fetching weather report: $e");
       return "error";
     }
   }
@@ -17,9 +16,7 @@ class GetLocationWeather {
   static Future<List<String>> getAddress(String ip) async {
     List<String> res = [];
     try {
-      Response response = await Dio().get('http://ip-api.com/json/$ip');
-      print(response.data['lat']);
-      print(response.data['lon']);
+      Response response = await Dio().get(dotenv.env['GetLocEndPoint']! + ip);
 
       // Ensure data['lat'] and data['lon'] are strings before adding them to the list
       if (response.data['lat'] != null && response.data['lon'] != null) {
@@ -28,11 +25,8 @@ class GetLocationWeather {
           response.data['lat'].toString()
         ];
       }
-      print("tanoj");
-      print(res);
       return res;
     } catch (e) {
-      print("Error fetching weather report: $e");
       return res;
     }
   }
@@ -44,7 +38,6 @@ class GetLocationWeather {
       res = await getAddress(ip);
       return res;
     } catch (e) {
-      print("Error fetching weather report: $e");
       return res;
     }
   }
