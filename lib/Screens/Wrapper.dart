@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:locationsearch/Screens/BlankPage.dart';
 import 'package:locationsearch/Screens/HomePage.dart';
 import 'package:locationsearch/Screens/LoginPage.dart';
 
@@ -33,13 +34,13 @@ class _WrapperState extends State<Wrapper> {
       }
     }
 
-    // _permissionGranted = await location.hasPermission();
-    // if (_permissionGranted == PermissionStatus.denied) {
-    //   _permissionGranted = await location.requestPermission();
-    //   if (_permissionGranted != PermissionStatus.granted) {
-    //     // return;
-    //   }
-    // }
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
     // _locationData = await location.getLocation();
     // print(_locationData.latitude);
     // print(_locationData.longitude);
@@ -55,7 +56,11 @@ class _WrapperState extends State<Wrapper> {
               return CircularProgressIndicator(); // Or any other loading indicator
             }
             if (snapshot.hasData) {
+              // if (_permissionGranted != PermissionStatus.granted) {
+              //   return BlankPage();
+              // } else {
               return MyHomePage();
+              //}
             } else {
               return LoginPage();
             }

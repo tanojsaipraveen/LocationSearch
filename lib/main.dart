@@ -10,6 +10,7 @@ import 'package:locationsearch/Screens/Wrapper.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
 Future<void> main() async {
+  await dotenv.load(fileName: "assets/.env");
   WidgetsFlutterBinding.ensureInitialized();
   final appDocumentDirectory =
       await path_provider.getApplicationDocumentsDirectory();
@@ -18,15 +19,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Platform.isAndroid
       ? await Firebase.initializeApp(
-          options: const FirebaseOptions(
-            apiKey: "AIzaSyBxDqdOj1yxWd60zK3bJzOVkzsaEO6Eb_k",
-            appId: "1:822565429375:android:8fe67966f394a2b22c5f4a",
-            messagingSenderId: "822565429375",
-            projectId: "ekart-b0cfe",
+          options: FirebaseOptions(
+            apiKey: dotenv.env["FirebaseAppKey"].toString(),
+            appId: dotenv.env["FirebaseAppId"].toString(),
+            messagingSenderId: dotenv.env["FirebaseMessageSenderId"].toString(),
+            projectId: dotenv.env["FirebaseProjectId"].toString(),
           ),
         )
       : await Firebase.initializeApp();
-  await dotenv.load(fileName: "assets/.env");
+
   runApp(const MyApp());
 }
 

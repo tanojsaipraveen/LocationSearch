@@ -544,6 +544,15 @@ class _LoginPageState extends State<LoginPage> {
       final provider = OAuthProvider("microsoft.com");
       provider.setCustomParameters({"tenant": dotenv.env["Tenant"].toString()});
       await FirebaseAuth.instance.signInWithProvider(provider);
-    } catch (e) {}
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const MyHomePage()),
+        (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.toString()),
+        duration: const Duration(seconds: 5),
+      ));
+    }
   }
 }

@@ -1,11 +1,14 @@
 import 'package:location/location.dart';
 import 'package:locationsearch/Apis/GetLocationWeather.dart';
+import 'package:locationsearch/Controllers/DataController.dart';
+import 'package:get/get.dart';
 
 class LoactionCoordinate {
   Location location = new Location();
   late bool _serviceEnabled;
   late PermissionStatus _permissionGranted;
   late LocationData _locationData;
+  DataController dataController = Get.put(DataController());
 
   Future<List<String>> fetchLocationData() async {
     final permissionStatus = await location.hasPermission();
@@ -30,9 +33,27 @@ class LoactionCoordinate {
   }
 
   Future<List<String>> getLocationData1() async {
+    // _serviceEnabled = await location.serviceEnabled();
+    // if (!_serviceEnabled) {
+    //   _serviceEnabled = await location.requestService();
+    //   if (!_serviceEnabled) {
+    //     //return;
+    //   }
+    // }
+
+    // _permissionGranted = await location.hasPermission();
+    // if (_permissionGranted == PermissionStatus.denied) {
+    //   _permissionGranted = await location.requestPermission();
+    //   if (_permissionGranted != PermissionStatus.granted) {
+    //     // return;
+    //   }
+    // }
     List<String> res = [];
     try {
-      LocationData locationData = await Location().getLocation();
+      //LocationData locationData = await Location().getLocation();
+
+      LocationData locationData = await dataController.getcoordinates();
+      // locationData = await location.getLocation();
       res.add(locationData.longitude.toString());
       res.add(locationData.latitude.toString());
     } catch (e) {

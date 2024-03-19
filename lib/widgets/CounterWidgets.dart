@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 class Counter extends StatefulWidget {
   final String header;
   final int initialValue;
-  final ValueChanged<int>? onValueChanged; // Callback function to emit value
+  final IconData iconData;
+  final ValueChanged<int>? onValueChanged;
+  // Callback function to emit value
 
   Counter({
     required this.header,
     required this.initialValue,
+    required this.iconData,
     this.onValueChanged,
-    required Icon icon,
   });
 
   @override
@@ -57,7 +59,7 @@ class _CounterState extends State<Counter> {
               padding: const EdgeInsets.only(left: 20),
               child: Row(
                 children: [
-                  const Icon(Icons.person),
+                  Icon(widget.iconData),
                   const SizedBox(
                     width: 20,
                   ),

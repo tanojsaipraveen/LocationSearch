@@ -21,6 +21,8 @@ import 'package:locationsearch/widgets/TravelActivitySelector.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:toastification/toastification.dart';
 
+import '../widgets/DateSelectionBlock.dart';
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key});
 
@@ -29,6 +31,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  ValueNotifier<bool> isTaskRunningNotifier = ValueNotifier<bool>(false);
+  ValueNotifier<bool> _isLoading = ValueNotifier<bool>(true);
   DataController dataController = Get.put(DataController());
   DataController dataControllerVariable = Get.find<DataController>();
   Location location = new Location();
@@ -73,11 +77,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void fetchdataloc(dateTimeRange) {
+    _isLoading.value = true;
     setState(() {
       lon = returndata[2][0];
       lat = returndata[2][1];
       isIntial = false;
-      fetchData(isIntial, lon, lat);
+
+      _nearby = fetchData(isIntial, lon, lat);
+      _isLoading.value = false;
       selectedDates = dateTimeRange;
     });
   }
@@ -127,7 +134,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     // _initializeData();
     super.initState();
-    dataController.getLocation();
+
+    getlocationdetails();
+    // _isLoading.value = false;
   }
 
   // Future<void> _getLocation() async {
@@ -139,13 +148,21 @@ class _MyHomePageState extends State<MyHomePage> {
   //   }
   // }
 
-  Future<List<String>> getlocationdetails() async {
+  Future<void> getlocationdetails() async {
     LoactionCoordinate loactionCoordinate = LoactionCoordinate();
-    return await loactionCoordinate.fetchLocationData();
+    var locationres = await loactionCoordinate.fetchLocationData();
+    //   _nearby = fetchData(isIntial, locationres[0], locationres[1]);
+    if (_nearby != null) {
+      _isLoading.value = false;
+    }
+
+    await dataController.getLocation();
+    _nearby = fetchData(isIntial, locationres[0], locationres[1]);
+    _isLoading.value = false;
   }
 
   Future addDetails(location, datefrom, dateto, triptype, men, women, children,
-      activities) async {
+      activities, weatherReportResult) async {
     try {
       await FirebaseFirestore.instance
           .collection('users')
@@ -159,8 +176,14 @@ class _MyHomePageState extends State<MyHomePage> {
         'Men': men,
         'Women': women,
         'Children': children,
-        'Activities': activities
+        'Activities': activities,
+        'WeatherCondition': weatherReportResult,
+        'Time': Timestamp.fromDate(DateTime.now())
       });
+      setState(() {
+        isTaskRunningNotifier.value = false;
+      });
+
       toastification.show(
         context: context,
         alignment: Alignment.center,
@@ -179,13 +202,18 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<NearbyModel>? fetchData(isIntial, lon1, lat1) async {
+  Future<NearbyModel> fetchData(isIntial, lon1, lat1) async {
     // setState(() {});
     // return await NearbyApi.getNearByPlaces(lon!, lat!);
     if (!isIntial) {
+      // return await NearbyApi.getNearByPlaces(
+      //     dataControllerVariable.longitude.value,
+      //     dataControllerVariable.latitude.value);
+
       return await NearbyApi.getNearByPlaces(
-          dataControllerVariable.longitude.value,
-          dataControllerVariable.latitude.value);
+        returndata[2][0],
+        returndata[2][1],
+      );
     } else {
       // if (dataControllerVariable.longitude.value != 0.0) {
       //   return await NearbyApi.getNearByPlaces(
@@ -206,6 +234,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print("main build");
     final start = selectedDates.start;
     final end = selectedDates.end;
     return SafeArea(
@@ -249,6 +278,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                           Obx(() => Visibility(
                                 visible: dataController.isVisible.value,
+                                //visible: true,
                                 child: Column(
                                   children: [
                                     SizedBox(
@@ -267,6 +297,23 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ],
                                 ),
                               )),
+                          // Column(
+                          //   children: [
+                          //     SizedBox(
+                          //         width: 30,
+                          //         child:
+                          //             Image.asset("assets/images/cloudy.png")),
+                          //     const SizedBox(
+                          //       height: 10,
+                          //     ),
+                          //     Obx(() => Text(
+                          //         "${dataController.currentWeather}°C",
+                          //         style: const TextStyle(
+                          //             color: Colors.black,
+                          //             fontSize: 24,
+                          //             fontWeight: FontWeight.w400)))
+                          //   ],
+                          // ),
                         ],
                       ),
                       Padding(
@@ -506,7 +553,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     height: 20,
                   ),
                   Visibility(
-                    visible: isResultAviable,
+                    visible: isResultAviable && _controller.text.isNotEmpty,
                     child: Text(
                       weatherReportResult.toString(),
                       style: const TextStyle(fontSize: 18),
@@ -526,204 +573,239 @@ class _MyHomePageState extends State<MyHomePage> {
                     height: 10,
                   ),
                   SizedBox(
-                      height: 220,
-                      child: FutureBuilder(
-                          future: getlocationdetails(),
-                          builder: (context, AsyncSnapshot snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              // While waiting for data, show a loading indicator
-                              return Center(child: CircularProgressIndicator());
-                            } else if (snapshot.hasError) {
-                              // If there's an error fetching parameters, display the error message
-                              return Center(
-                                  child: Text('Error: ${snapshot.error}'));
-                            } else {
-                              final parameters = snapshot.data;
-                              return FutureBuilder(
-                                future: fetchData(
-                                    isIntial, parameters[0], parameters[1]),
-                                builder: (context, AsyncSnapshot snapshot) {
-                                  if (snapshot.hasData) {
-                                    return ListView.builder(
-                                      physics:
-                                          const AlwaysScrollableScrollPhysics(),
-                                      scrollDirection: Axis.horizontal,
-                                      itemCount: snapshot.data!.data.length,
-                                      itemBuilder:
-                                          (BuildContext context, int index) {
-                                        if (snapshot.data!.data[index].name !=
-                                                null &&
-                                            snapshot.data!.data[index].photo !=
-                                                null &&
-                                            snapshot.data!.data[index].rating !=
-                                                null) {
-                                          return GestureDetector(
-                                            onTap: () {
-                                              Navigator.of(context)
-                                                  .push(MaterialPageRoute(
-                                                builder: (context) => PlacePage(
-                                                  // placeLocationModel: snapshot
-                                                  //     .data!.data[index],
-                                                  name: snapshot
-                                                      .data!.data[index].name,
-                                                  image: snapshot
-                                                      .data!
-                                                      .data[index]
-                                                      .photo
-                                                      .images
-                                                      .original
-                                                      .url,
-                                                  address: snapshot.data!
-                                                      .data[index].address,
+                    height: 220,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: _isLoading,
+                      builder: (context, isLoading, child) {
+                        if (isLoading) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        } else {
+                          return FutureBuilder(
+                            future: _nearby!,
+                            builder: (context, AsyncSnapshot snapshot) {
+                              if (snapshot.hasData) {
+                                return ListView.builder(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: snapshot.data!.data.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    if (snapshot.data!.data[index].name !=
+                                            null &&
+                                        snapshot.data!.data[index].photo !=
+                                            null &&
+                                        snapshot.data!.data[index].rating !=
+                                            null) {
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context)
+                                              .push(MaterialPageRoute(
+                                            builder: (context) => PlacePage(
+                                              // placeLocationModel: snapshot
+                                              //     .data!.data[index],
+                                              name: snapshot
+                                                  .data!.data[index].name,
+                                              image: snapshot.data!.data[index]
+                                                  .photo.images.original.url,
+                                              address: snapshot
+                                                  .data!.data[index].address,
 
-                                                  latitude: snapshot.data!
-                                                      .data[index].latitude,
-                                                  longitude: snapshot.data!
-                                                      .data[index].longitude,
-                                                  rating: snapshot
-                                                      .data!.data[index].rating,
-                                                  description: snapshot.data!
-                                                      .data[index].description,
+                                              latitude: snapshot
+                                                  .data!.data[index].latitude,
+                                              longitude: snapshot
+                                                  .data!.data[index].longitude,
+                                              rating: snapshot
+                                                  .data!.data[index].rating,
+                                              description: snapshot.data!
+                                                  .data[index].description,
+                                            ),
+                                          ));
+                                        },
+                                        child: Card(
+                                          elevation: 4,
+                                          child: SizedBox(
+                                            width: 170,
+                                            child: Column(
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(0.0),
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            5),
+                                                    child: Image(
+                                                      image: NetworkImage(
+                                                          snapshot
+                                                              .data!
+                                                              .data[index]
+                                                              .photo!
+                                                              .images!
+                                                              .medium!
+                                                              .url
+                                                              .toString()),
+                                                      alignment:
+                                                          Alignment.center,
+                                                      height: 150,
+                                                      width: 200,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ));
-                                            },
-                                            child: Card(
-                                              elevation: 4,
-                                              child: SizedBox(
-                                                width: 170,
-                                                child: Column(
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              0.0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(5),
-                                                        child: Image(
-                                                          image: NetworkImage(
-                                                              snapshot
-                                                                  .data!
-                                                                  .data[index]
-                                                                  .photo!
-                                                                  .images!
-                                                                  .medium!
-                                                                  .url
-                                                                  .toString()),
-                                                          alignment:
-                                                              Alignment.center,
-                                                          height: 150,
-                                                          width: 200,
-                                                          fit: BoxFit.cover,
+                                                Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 8),
+                                                  child: Column(
+                                                    children: [
+                                                      Align(
+                                                        alignment: Alignment
+                                                            .centerLeft,
+                                                        child: Text(
+                                                          snapshot.data!
+                                                              .data[index].name
+                                                              .toString(),
+                                                          style:
+                                                              const TextStyle(
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            fontSize: 14,
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 8),
-                                                      child: Column(
+                                                      const SizedBox(height: 5),
+                                                      Row(
                                                         children: [
-                                                          Align(
-                                                            alignment: Alignment
-                                                                .centerLeft,
-                                                            child: Text(
-                                                              snapshot
-                                                                  .data!
-                                                                  .data[index]
-                                                                  .name
-                                                                  .toString(),
-                                                              style:
-                                                                  const TextStyle(
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                                fontSize: 14,
-                                                              ),
-                                                            ),
+                                                          SizedBox(
+                                                            width: 15,
+                                                            child: Image.asset(
+                                                                'assets/images/star1.png'),
                                                           ),
                                                           const SizedBox(
-                                                              height: 5),
-                                                          Row(
-                                                            children: [
-                                                              SizedBox(
-                                                                width: 15,
-                                                                child: Image.asset(
-                                                                    'assets/images/star1.png'),
-                                                              ),
-                                                              const SizedBox(
-                                                                  width: 5),
-                                                              Text(snapshot
-                                                                  .data!
-                                                                  .data[index]
-                                                                  .rating
-                                                                  .toString()),
-                                                            ],
-                                                          )
+                                                              width: 5),
+                                                          Text(snapshot
+                                                              .data!
+                                                              .data[index]
+                                                              .rating
+                                                              .toString()),
                                                         ],
-                                                      ),
-                                                    ),
-                                                  ],
+                                                      )
+                                                    ],
+                                                  ),
                                                 ),
-                                              ),
+                                              ],
                                             ),
-                                          );
-                                        }
-                                      },
-                                    );
-                                  } else if (snapshot.hasError) {
-                                    return const Text("");
-                                  } else if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return const Center(
-                                        child: CircularProgressIndicator());
-                                  } else {
-                                    return const Text("rrr");
-                                  }
-                                },
-                              );
-                            }
-                          })),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                );
+                              } else if (snapshot.hasError) {
+                                return const Text("Error");
+                              } else if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              } else {
+                                return const Text("rrr");
+                              }
+                            },
+                          );
+                        }
+                      },
+                    ),
+                  ),
                   const SizedBox(
                     height: 20,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 0),
+                  Visibility(
+                    visible: isResultAviable && _controller.text.isNotEmpty,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Nature of Trip",
+                            style: TextStyle(fontSize: 24),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              CustomRadio(
+                                text: 'Business',
+                                index: 1, // or any index you want
+                                selectedTrip: _selectedTrip,
+                                onTap: _handleTap,
+                              ),
+                              CustomRadio(
+                                text: 'Family',
+                                index: 2, // or any index you want
+                                selectedTrip: _selectedTrip,
+                                onTap: _handleTap,
+                              ),
+                              CustomRadio(
+                                text: 'Company',
+                                index: 3, // or any index you want
+                                selectedTrip: _selectedTrip,
+                                onTap: _handleTap,
+                              )
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Visibility(
+                    visible: isResultAviable && _controller.text.isNotEmpty,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Nature of Trip",
-                          style: TextStyle(fontSize: 24),
+                        const Align(
+                          alignment: Alignment.topLeft,
+                          child: Text(
+                            "Members",
+                            style: TextStyle(fontSize: 24),
+                          ),
                         ),
                         const SizedBox(
                           height: 10,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            CustomRadio(
-                              text: 'Business',
-                              index: 1, // or any index you want
-                              selectedTrip: _selectedTrip,
-                              onTap: _handleTap,
-                            ),
-                            CustomRadio(
-                              text: 'Family',
-                              index: 2, // or any index you want
-                              selectedTrip: _selectedTrip,
-                              onTap: _handleTap,
-                            ),
-                            CustomRadio(
-                              text: 'Company',
-                              index: 3, // or any index you want
-                              selectedTrip: _selectedTrip,
-                              onTap: _handleTap,
-                            )
-                          ],
+                        Counter(
+                          header: 'Men',
+                          initialValue: _counterValue1,
+                          onValueChanged: _handleCounter1ValueChanged,
+                          iconData: Icons.person, // You can pass the icon here
+                        ),
+                        const Divider(
+                          height: 20,
+                        ),
+                        Counter(
+                          header: 'Women',
+                          initialValue: _counterValue2,
+                          onValueChanged: _handleCounter2ValueChanged,
+                          iconData:
+                              Icons.person_2, // You can pass the icon here
+                        ),
+                        const Divider(
+                          height: 20,
+                        ),
+                        Counter(
+                          header: 'Children',
+                          initialValue: _counterValue3,
+                          onValueChanged: _handleCounter3ValueChanged,
+                          iconData:
+                              Icons.child_care, // You can pass the icon here
                         ),
                       ],
                     ),
@@ -731,61 +813,28 @@ class _MyHomePageState extends State<MyHomePage> {
                   const SizedBox(
                     height: 20,
                   ),
-                  const Align(
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                      "Members",
-                      style: TextStyle(fontSize: 24),
+                  Visibility(
+                    visible: isResultAviable && _controller.text.isNotEmpty,
+                    child: Column(
+                      children: [
+                        const Align(
+                          alignment: Alignment.topLeft,
+                          child: Text(
+                            "Activities",
+                            style: TextStyle(fontSize: 24),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        TravelActivitySelector(
+                          travelActivities: travelActivities,
+                          onSelectionChanged: (selectedActivities) {
+                            _selectedActivity(selectedActivities);
+                          },
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Counter(
-                    header: 'Men',
-                    initialValue: _counterValue1,
-                    onValueChanged: _handleCounter1ValueChanged,
-                    icon:
-                        const Icon(Icons.person), // You can pass the icon here
-                  ),
-                  const Divider(
-                    height: 20,
-                  ),
-                  Counter(
-                    header: 'Women',
-                    initialValue: _counterValue2,
-                    onValueChanged: _handleCounter2ValueChanged,
-                    icon:
-                        const Icon(Icons.person), // You can pass the icon here
-                  ),
-                  const Divider(
-                    height: 20,
-                  ),
-                  Counter(
-                    header: 'Children',
-                    initialValue: _counterValue3,
-                    onValueChanged: _handleCounter3ValueChanged,
-                    icon:
-                        const Icon(Icons.person), // You can pass the icon here
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Align(
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                      "Activities",
-                      style: TextStyle(fontSize: 24),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  TravelActivitySelector(
-                    travelActivities: travelActivities,
-                    onSelectionChanged: (selectedActivities) {
-                      _selectedActivity(selectedActivities);
-                    },
                   ),
                   const SizedBox(
                     height: 20,
@@ -795,29 +844,52 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           floatingActionButton: Visibility(
-            visible: isResultAviable,
-            child: FloatingActionButton(
-              // isExtended: true,
-              child: const Icon(Icons.save),
-              backgroundColor: Theme.of(context).primaryColor,
-              onPressed: () {
-                String triptype = "";
-                if (_selectedTrip == 1) {
-                  triptype = 'Business';
-                } else if (_selectedTrip == 2) {
-                  triptype = 'Family';
-                } else {
-                  triptype = 'Company';
-                }
-                addDetails(
-                    _controller.text.trim(),
-                    start,
-                    end,
-                    triptype,
-                    _counterValue1,
-                    _counterValue2,
-                    _counterValue3,
-                    selectedActivitie);
+            visible: isResultAviable && _controller.text.isNotEmpty,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: isTaskRunningNotifier,
+              builder: (context, isTaskRunning, child) {
+                return FloatingActionButton(
+                  // isExtended: true,
+                  child: isTaskRunning
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Icon(Icons.save),
+                  backgroundColor: Theme.of(context).primaryColor,
+                  onPressed: isTaskRunning
+                      ? null
+                      : () {
+                          // Update the isTaskRunningNotifier value when the button is pressed
+                          isTaskRunningNotifier.value = true;
+                          String triptype = "";
+                          if (_selectedTrip == 1) {
+                            triptype = 'Business';
+                          } else if (_selectedTrip == 2) {
+                            triptype = 'Family';
+                          } else {
+                            triptype = 'Company';
+                          }
+                          addDetails(
+                            _controller.text.trim(),
+                            start,
+                            end,
+                            triptype,
+                            _counterValue1,
+                            _counterValue2,
+                            _counterValue3,
+                            selectedActivitie,
+                            weatherReportResult,
+                          ).then((_) {
+                            // Reset the state after the task is completed
+                            isTaskRunningNotifier.value = false;
+                          });
+                        },
+                );
               },
             ),
           )),

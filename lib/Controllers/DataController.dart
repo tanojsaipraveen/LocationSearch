@@ -31,13 +31,72 @@ class DataController extends GetxController {
     }
   }
 
+  Future<LocationData> getcoordinates() async {
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        //return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        // return;
+      }
+    }
+    // _locationData = await location.getLocation();
+    // print(_locationData.latitude);
+    // print(_locationData.longitude);
+
+    LocationData locationData = await Location().getLocation();
+    // locationData = await location.getLocation();
+    lat = locationData.latitude;
+    lon = locationData.longitude;
+    return locationData;
+  }
+
   Future<void> getLocationData() async {
     try {
-      LocationData locationData = await Location().getLocation();
-      lat = locationData.latitude;
-      lon = locationData.longitude;
-      latitude.value = locationData.latitude!;
-      longitude.value = locationData.longitude!;
+      // _serviceEnabled = await location.serviceEnabled();
+      // if (!_serviceEnabled) {
+      //   _serviceEnabled = await location.requestService();
+      //   if (!_serviceEnabled) {
+      //     //return;
+      //   }
+      // }
+
+      // _permissionGranted = await location.hasPermission();
+      // if (_permissionGranted == PermissionStatus.denied) {
+      //   _permissionGranted = await location.requestPermission();
+      //   if (_permissionGranted != PermissionStatus.granted) {
+      //     // return;
+      //   }
+      // }
+      // _locationData = await location.getLocation();
+      // print(_locationData.latitude);
+      // print(_locationData.longitude);
+
+      //LocationData locationData = await Location().getLocation();
+
+      //LocationData locationData = await getcoordinates();
+      // locationData = await location.getLocation();
+      // lat = locationData.latitude;
+      // lon = locationData.longitude;
+      // latitude.value = locationData.latitude!;
+      // longitude.value = locationData.longitude!;
+      if (lat == null) {
+        await getcoordinates();
+        latitude.value = lat!;
+        longitude.value = lon!;
+      } else {
+        latitude.value = lat!;
+        longitude.value = lon!;
+      }
+
+      // print("lonnn" + locationData.latitude.toString());
       await fetchWeather();
     } catch (e) {
       print('Error getting location: $e');
@@ -60,8 +119,9 @@ class DataController extends GetxController {
   Future<void> fetchWeather() async {
     try {
       var openres = await OpenWeatherApi.getCurrentTemp(lon!, lat!);
-
+      //isVisible.value = true;
       currentWeather.value = openres.main!.temp!.round();
+
       toggleVisibility();
     } catch (e) {
       print('Error fetchWeather');
