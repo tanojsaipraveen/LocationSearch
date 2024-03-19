@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class WeatherApi {
   static Future<String> getWeatherReport(
       double lon, double lat, String startDate, String endDate) async {
     try {
       Response response = await Dio().get(
-        'https://weatherapi-ikpd.onrender.com/getweatherreport',
+        dotenv.env['WeatherEndPoint']!,
         queryParameters: {
           'lon': lon,
           'lat': lat,

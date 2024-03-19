@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:locationsearch/Models/LocationDataModel.dart' as locationdata;
 import 'package:locationsearch/Screens/SearchPage.dart';
@@ -43,8 +44,8 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<List<locationdata.LocationDataModel>> locationList(
       String address) async {
-    Response response = await Dio().get('https://photon.komoot.io/api/',
-        queryParameters: {'q': address, "limit": 10});
+    Response response = await Dio().get(dotenv.env['LocationEndpoint'] ?? "",
+        queryParameters: {'q': address, "limit": dotenv.env['LocationLimit']});
     final json = response.data;
     return (json['features'] as List)
         .map((e) => locationdata.LocationDataModel.fromJson(e))
@@ -75,11 +76,9 @@ class _SearchPageState extends State<SearchPage> {
                     _timer1?.cancel();
                     _timer1 = Timer(const Duration(milliseconds: 0), () {
                       if (val.isEmpty) {
-                        // Clear the list when the text field is empty
                         items.clear();
                         setState(() {});
                       } else {
-                        // Cancel the previous timer if there is any
                         _timer?.cancel();
                         // Start a new timer
                         _timer = Timer(const Duration(milliseconds: 0), () {
@@ -100,14 +99,6 @@ class _SearchPageState extends State<SearchPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Visibility(
-                            visible: _controller.text.isEmpty,
-                            child: IconButton(
-                                onPressed: () {
-                                  _controller.text = "";
-                                  setState(() {});
-                                },
-                                icon: const Icon(Icons.mic))),
-                        Visibility(
                             visible: _controller.text.isNotEmpty,
                             child: IconButton(
                                 onPressed: () {
@@ -119,6 +110,7 @@ class _SearchPageState extends State<SearchPage> {
                       ],
                     ),
                     filled: true,
+                    prefixIconColor: Theme.of(context).primaryColor,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(
                           10.0), // Adjust border radius here
@@ -177,7 +169,6 @@ class _SearchPageState extends State<SearchPage> {
                                   },
                                   icon: const Icon(Icons.arrow_outward))),
                           onTap: () {
-                            print(e.properties!.name);
                             _controller.text = e.properties!.name.toString();
                             items.clear();
                             Navigator.pop(context, [
