@@ -39,8 +39,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Colors.blueGrey,
-        primarySwatch: Colors.blueGrey,
+        primaryColor: Colors.teal,
+        primarySwatch: Colors.teal,
+        primaryColorDark: Colors.teal[100],
         textTheme: GoogleFonts.openSansTextTheme(),
         // colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: false,
