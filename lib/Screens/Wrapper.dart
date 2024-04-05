@@ -4,6 +4,7 @@ import 'package:location/location.dart';
 import 'package:locationsearch/Screens/BlankPage.dart';
 import 'package:locationsearch/Screens/HomePage.dart';
 import 'package:locationsearch/Screens/LoginPage.dart';
+import 'package:locationsearch/Screens/MainPage.dart';
 
 class Wrapper extends StatefulWidget {
   const Wrapper({super.key});
@@ -59,7 +60,7 @@ class _WrapperState extends State<Wrapper> {
               // if (_permissionGranted != PermissionStatus.granted) {
               //   return BlankPage();
               // } else {
-              return MyHomePage();
+              return MainPage();
               //}
             } else {
               return LoginPage();

@@ -3,10 +3,12 @@ import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:locationsearch/Screens/Wrapper.dart';
+import 'package:chat_gpt_flutter/chat_gpt_flutter.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
 Future<void> main() async {
@@ -36,6 +38,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Change this to the desired color
+      statusBarIconBrightness:
+          Brightness.dark, // Set status bar icon colors to white
+    ));
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

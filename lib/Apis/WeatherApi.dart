@@ -39,10 +39,9 @@ class WeatherApi {
         weatherCondition =
             weatherCondition.substring(0, weatherCondition.length - 2);
       }
-
-      return weatherCondition.isEmpty
-          ? "No specific weather condition"
-          : weatherCondition;
+      var result =
+          weatherCondition.isEmpty ? "Mostly Cloudy" : weatherCondition;
+      return result;
     } catch (e) {
       // Handle errors appropriately
       print("Error fetching weather report: $e");

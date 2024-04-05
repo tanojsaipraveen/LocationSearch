@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:locationsearch/Models/PlaceLocationModel.dart';
 import 'package:locationsearch/widgets/LocationButton.dart';
@@ -113,160 +114,157 @@ class _PlacePageState extends State<PlacePage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-              },
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                    color: _circleColor,
-                    borderRadius: BorderRadius.circular(20)),
-                child: Icon(
-                  Icons.arrow_back,
-                  color: _iconColor,
-                  size: 28,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () {
+              Navigator.of(context).pop();
+            },
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                  color: _circleColor, borderRadius: BorderRadius.circular(20)),
+              child: Icon(
+                Icons.arrow_back,
+                color: _iconColor,
+                size: 28,
+              ),
+            ),
+          ),
+
+          //  IconButton(
+          //     onPressed: () {
+          //       Navigator.of(context).pop();
+          //     },
+          //     icon: Icon(
+          //       Icons.arrow_back,
+          //       color: _iconColor,
+          //       size: 28,
+          //     )),
+        ),
+      ),
+      body: SingleChildScrollView(
+        controller: _controller,
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              height: MediaQuery.of(context).size.height / 2,
+              child: ShaderMask(
+                shaderCallback: (Rect bounds) {
+                  return LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.black,
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment(0.0, 0.3),
+                  ).createShader(bounds);
+                },
+                blendMode: BlendMode.dstIn,
+                child: CachedNetworkImage(
+                  imageUrl: widget.image,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Image.asset(
+                    'assets/images/placeholder.png',
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
                 ),
               ),
             ),
-
-            //  IconButton(
-            //     onPressed: () {
-            //       Navigator.of(context).pop();
-            //     },
-            //     icon: Icon(
-            //       Icons.arrow_back,
-            //       color: _iconColor,
-            //       size: 28,
-            //     )),
-          ),
-        ),
-        body: SingleChildScrollView(
-          controller: _controller,
-          child: Column(
-            children: [
-              Container(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height / 2,
-                child: ShaderMask(
-                  shaderCallback: (Rect bounds) {
-                    return LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        Colors.black,
-                      ],
-                      begin: Alignment.bottomCenter,
-                      end: Alignment(0.0, 0.3),
-                    ).createShader(bounds);
-                  },
-                  blendMode: BlendMode.dstIn,
-                  child: CachedNetworkImage(
-                    imageUrl: widget.image,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Image.asset(
-                      'assets/images/placeholder.png',
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+            SizedBox(
+              height: 20,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      widget.name,
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
-                    errorWidget: (context, url, error) => Icon(Icons.error),
                   ),
-                ),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    Align(
+                  SizedBox(
+                    height: 5,
+                  ),
+                  Align(
                       alignment: Alignment.topLeft,
                       child: Text(
-                        widget.name,
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          widget.address,
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
-                        )),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 20),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 15,
-                            child: Image.asset('assets/images/star1.png'),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(widget.rating.toString()),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    // Text(
-                    //   widget.description,
-                    //   style: TextStyle(height: 2),
-                    // ),
-
-                    SingleChildScrollView(
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          textToShow,
-                          style: TextStyle(height: 2),
+                        widget.address,
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                      )),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 20),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 15,
+                          child: Image.asset('assets/images/star1.png'),
                         ),
+                        const SizedBox(width: 5),
+                        Text(widget.rating.toString()),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  // Text(
+                  //   widget.description,
+                  //   style: TextStyle(height: 2),
+                  // ),
+
+                  SingleChildScrollView(
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        textToShow,
+                        style: TextStyle(height: 2),
                       ),
                     ),
-                    SizedBox(
-                      height: 70,
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(
+                    height: 70,
+                  ),
+                ],
               ),
-              // LocationButton(
-              //     latitude: double.parse(widget.latitude),
-              //     longitude: double.parse(widget.longitude))
-            ],
-          ),
+            ),
+            // LocationButton(
+            //     latitude: double.parse(widget.latitude),
+            //     longitude: double.parse(widget.longitude))
+          ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          //isExtended: true,
-          // icon: Transform.rotate(angle: 0, child: Icon(Icons.directions)),
-          backgroundColor: Theme.of(context).primaryColor,
-          icon: Icon(Icons.map),
-          onPressed: () {
-            MapUtils.openMap(
-                double.parse(widget.latitude), double.parse(widget.longitude));
-          },
-          label: Text(
-            "View map",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          extendedPadding: EdgeInsets.symmetric(horizontal: 80),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        //isExtended: true,
+        // icon: Transform.rotate(angle: 0, child: Icon(Icons.directions)),
+        backgroundColor: Theme.of(context).primaryColor,
+        icon: Icon(Icons.map),
+        onPressed: () {
+          MapUtils.openMap(
+              double.parse(widget.latitude), double.parse(widget.longitude));
+        },
+        label: Text(
+          "View map",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        extendedPadding: EdgeInsets.symmetric(horizontal: 80),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

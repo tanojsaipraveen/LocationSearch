@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:locationsearch/Models/LocationDataModel.dart' as locationdata;
+import 'package:locationsearch/Screens/MostPopularCitiesPage.dart';
 import 'package:locationsearch/Screens/SearchPage.dart';
 import 'package:locationsearch/main.dart';
 import 'package:page_transition/page_transition.dart';
@@ -26,6 +27,65 @@ class _SearchPageState extends State<SearchPage> {
   Timer? _timer1;
   DateTimeRange selectedDates =
       DateTimeRange(start: DateTime.now(), end: DateTime.now());
+
+  final List<CountryInfo> countries = [
+    CountryInfo(
+      name: 'France',
+      latitude: 48.8584,
+      longitude: 2.2945,
+      famousPlace: 'Eiffel Tower',
+      countryCode: 'FR',
+    ),
+    CountryInfo(
+      name: 'Italy',
+      latitude: 41.87194,
+      longitude: 12.492373,
+      famousPlace: 'Colosseum',
+      countryCode: 'IT',
+    ),
+    CountryInfo(
+      name: 'United States',
+      latitude: 40.689247,
+      longitude: -74.044502,
+      famousPlace: 'Statue of Liberty',
+      countryCode: 'US',
+    ),
+    CountryInfo(
+      name: 'Japan',
+      latitude: 35.363602,
+      longitude: 138.726379,
+      famousPlace: 'Mount Fuji',
+      countryCode: 'JP',
+    ),
+    CountryInfo(
+      name: 'Australia',
+      latitude: -33.856159,
+      longitude: 151.215256,
+      famousPlace: 'Sydney Opera House',
+      countryCode: 'AU',
+    ),
+    CountryInfo(
+      name: 'Brazil',
+      latitude: -22.9510,
+      longitude: -43.2065,
+      famousPlace: 'Christ the Redeemer',
+      countryCode: 'BR',
+    ),
+    CountryInfo(
+      name: 'India',
+      latitude: 27.173891,
+      longitude: 78.042068,
+      famousPlace: 'Taj Mahal',
+      countryCode: 'IN',
+    ),
+    CountryInfo(
+      name: 'China',
+      latitude: 40.431908,
+      longitude: 116.570374,
+      famousPlace: 'Great Wall of China',
+      countryCode: 'CN',
+    )
+  ];
 
   @override
   void dispose() {
@@ -188,36 +248,65 @@ class _SearchPageState extends State<SearchPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Visibility(
                   visible: _controller.text.isEmpty,
-                  child: Column(
+                  child: const Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            "Recent",
+                          Text(
+                            "Most Popular Cities",
                             style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black54),
+                                fontSize: 18, fontWeight: FontWeight.bold),
                           ),
-                          GestureDetector(
-                            onTap: () async {
-                              var box = await Hive.openBox('testBox');
-                              box.clear();
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 14),
-                              decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(10)),
-                              child: Text("clear"),
-                            ),
-                          )
+                          // GestureDetector(
+                          //   onTap: () async {
+                          //     var box = await Hive.openBox('testBox');
+                          //     box.clear();
+                          //   },
+                          //   child: Container(
+                          //     padding: EdgeInsets.symmetric(horizontal: 14),
+                          //     decoration: BoxDecoration(
+                          //         color: Colors.grey[300],
+                          //         borderRadius: BorderRadius.circular(10)),
+                          //     child: Text("clear"),
+                          //   ),
+                          // )
                         ],
                       ),
                     ],
                   )),
-            )
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Visibility(
+              visible: _controller.text.isEmpty,
+              child: Expanded(
+                child: ListView.separated(
+                  itemCount: countries.length,
+                  itemBuilder: (context, index) {
+                    final country = countries[index];
+                    return MostPopularCitiesPage(
+                      country: country,
+                      onTap: (CountryInfo country) {
+                        List<double> coordinates = [
+                          country.longitude,
+                          country.latitude
+                        ];
+                        _controller.text = country.famousPlace.toString();
+                        _location = country.famousPlace;
+                        _coordinate = coordinates;
+
+                        Navigator.pop(context,
+                            [_controller.text, _location, _coordinate]);
+                        // Handle the onTap action here
+                      },
+                    );
+                  },
+                  separatorBuilder: (context, index) => Divider(),
+                ),
+              ),
+            ),
           ],
         ),
       ),
