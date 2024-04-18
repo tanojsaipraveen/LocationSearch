@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:locationsearch/Models/WeatherResultModel.dart' as WeatherModel;
 
 class WeatherApi {
   static Future<String> getWeatherReport(
@@ -46,6 +47,37 @@ class WeatherApi {
       // Handle errors appropriately
       print("Error fetching weather report: $e");
       return "error";
+    }
+  }
+
+  static Future<WeatherModel.WeatherResultModel> getWeatherReportResult(
+      double lon, double lat, String startDate, String endDate) async {
+    try {
+      Response response1 = await Dio().get(
+        dotenv.env['WeatherEndPoint']!,
+        queryParameters: {
+          'lon': lon,
+          'lat': lat,
+          'startDate': startDate,
+          'endDate': endDate
+        },
+      );
+
+      if (response1.statusCode == 200) {
+        String responseData = response1.data;
+        Map<String, dynamic> data1 = json.decode(responseData);
+        WeatherModel.WeatherResultModel weatherModel =
+            WeatherModel.WeatherResultModel.fromJson(data1);
+
+        return weatherModel;
+      } else {
+        throw Exception('Failed to load nearby places');
+      }
+    } catch (e) {
+      // Handle errors appropriately
+
+      print("Error fetching weather report: $e");
+      throw Exception('Failed to load nearby places');
     }
   }
 }

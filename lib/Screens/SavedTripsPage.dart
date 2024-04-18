@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:locationsearch/Apis/WeatherApi.dart';
+import 'package:locationsearch/Screens/AiTripPage.dart';
+import 'package:locationsearch/Screens/OfflineAiTripPage.dart';
+import 'package:toastification/toastification.dart';
 
 class SavedTripsPage extends StatefulWidget {
   const SavedTripsPage({Key? key}) : super(key: key);
@@ -150,6 +153,8 @@ class _SavedTripsPageState extends State<SavedTripsPage> {
                         String logitude = document['Logitude'].toString();
                         String latitude = document['Latitude'].toString();
                         String triptype = document['TripType'].toString();
+                        String tripplan = document['TripPlan'].toString();
+
                         DateTime datefrom = document['DateFrom'].toDate();
                         String imgurl = document['ImgUrl'].toString();
                         String formattedatefrom =
@@ -157,269 +162,294 @@ class _SavedTripsPageState extends State<SavedTripsPage> {
                         DateTime dateto = document['DateTo'].toDate();
                         String formattedateto =
                             DateFormat('yyyy-MM-dd').format(dateto);
+                        Duration difference = dateto.difference(datefrom);
+                        int differenceInDays = difference.inDays;
                         return Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 20, vertical: 10),
-                          child: Container(
-                            width: double.infinity,
-                            height: 340,
-                            decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey
-                                        .withOpacity(0.5), // Shadow color
-                                    spreadRadius: 5, // Spread radius
-                                    blurRadius: 7, // Blur radius
-                                    offset: const Offset(
-                                        0, 3), // Offset in x and y direction
-                                  ),
-                                ],
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20)),
-                            child: Column(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(20.0),
-                                    topRight: Radius.circular(20.0),
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      CachedNetworkImage(
-                                        imageUrl: imgurl,
-                                        width: double.infinity,
-                                        height: 200,
-                                        fit: BoxFit.cover,
-                                        placeholder: (context, url) =>
-                                            Image.asset(
-                                          'assets/images/placeholder.png',
+                          child: GestureDetector(
+                            onTap: () {
+                              if (tripplan != "") {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) =>
+                                        OfflineAiTripPage(jsonData: tripplan)));
+                              } else {
+                                toastification.show(
+                                  context: context,
+                                  alignment: Alignment.center,
+                                  type: ToastificationType.success,
+                                  title: const Text('No Trip Plan.'),
+                                  autoCloseDuration: const Duration(seconds: 5),
+                                );
+                              }
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              height: 340,
+                              decoration: BoxDecoration(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey
+                                          .withOpacity(0.5), // Shadow color
+                                      spreadRadius: 5, // Spread radius
+                                      blurRadius: 7, // Blur radius
+                                      offset: const Offset(
+                                          0, 3), // Offset in x and y direction
+                                    ),
+                                  ],
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20)),
+                              child: Column(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(20.0),
+                                      topRight: Radius.circular(20.0),
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        CachedNetworkImage(
+                                          imageUrl: imgurl,
                                           width: double.infinity,
                                           height: 200,
                                           fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              Image.asset(
+                                            'assets/images/placeholder.png',
+                                            width: double.infinity,
+                                            height: 200,
+                                            fit: BoxFit.cover,
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              const Icon(Icons.error),
                                         ),
-                                        errorWidget: (context, url, error) =>
-                                            const Icon(Icons.error),
-                                      ),
-                                      Container(
-                                        width: double.infinity,
-                                        height: 200,
-                                        decoration: const BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              Colors.black87,
-                                              Colors.transparent
-                                            ],
+                                        Container(
+                                          width: double.infinity,
+                                          height: 200,
+                                          decoration: const BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                Colors.black87,
+                                                Colors.transparent
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 20, vertical: 10),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              triptype,
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            GestureDetector(
-                                              onTap: () {
-                                                showModalBottomSheet(
-                                                  context: context,
-                                                  builder:
-                                                      (BuildContext context) {
-                                                    return DeletePlanBottomSheet(
-                                                      document: document,
-                                                    );
-                                                  },
-                                                );
-                                              },
-                                              child: const Icon(
-                                                Icons.more_horiz,
-                                                color: Colors.white70,
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                      Positioned(
-                                          top: 120,
-                                          left: 20,
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 20, vertical: 10),
                                           child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
-                                                formatDate(formattedatefrom),
+                                                triptype,
                                                 style: const TextStyle(
                                                     color: Colors.white,
+                                                    fontSize: 16,
                                                     fontWeight:
                                                         FontWeight.bold),
                                               ),
-                                              const Text(
-                                                ' - ',
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                              Text(
-                                                formatDate(formattedateto),
-                                                style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight:
-                                                        FontWeight.bold),
+                                              GestureDetector(
+                                                onTap: () {
+                                                  showModalBottomSheet(
+                                                    context: context,
+                                                    builder:
+                                                        (BuildContext context) {
+                                                      return DeletePlanBottomSheet(
+                                                        document: document,
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                                child: const Icon(
+                                                  Icons.more_horiz,
+                                                  color: Colors.white70,
+                                                ),
                                               )
                                             ],
-                                          )),
-                                      Positioned(
-                                        top: 150,
-                                        left: 20,
-                                        child: Text(
-                                          location,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 10),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Align(
-                                        alignment: Alignment.topLeft,
-                                        child: Text(location,
+                                        Positioned(
+                                            top: 120,
+                                            left: 20,
+                                            child: Row(
+                                              children: [
+                                                Text(
+                                                  formatDate(formattedatefrom),
+                                                  style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                                const Text(
+                                                  ' - ',
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                                Text(
+                                                  formatDate(formattedateto),
+                                                  style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                )
+                                              ],
+                                            )),
+                                        Positioned(
+                                          top: 150,
+                                          left: 20,
+                                          child: Text(
+                                            location,
                                             overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.left,
                                             style: const TextStyle(
-                                              color: Colors.black,
+                                              color: Colors.white,
                                               fontSize: 24,
                                               fontWeight: FontWeight.bold,
-                                            )),
-                                      ),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                      Align(
-                                        alignment: Alignment.topLeft,
-                                        child: Text(
-                                          overflow: TextOverflow.ellipsis,
-                                          weathercondition,
-                                          textAlign: TextAlign.left,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 10),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Align(
+                                          alignment: Alignment.topLeft,
+                                          child: Text(location,
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.left,
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold,
+                                              )),
                                         ),
-                                      ),
-                                      const SizedBox(
-                                        height: 0,
-                                      ),
-                                      Row(
-                                        children: [
-                                          Flexible(
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                  right: 20),
-                                              child: Align(
-                                                alignment: Alignment.topLeft,
-                                                child: Text(
-                                                  activities,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  maxLines: 2,
-                                                  textAlign: TextAlign.left,
+                                        const SizedBox(
+                                          height: 5,
+                                        ),
+                                        Align(
+                                          alignment: Alignment.topLeft,
+                                          child: Text(
+                                            overflow: TextOverflow.ellipsis,
+                                            weathercondition,
+                                            textAlign: TextAlign.left,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 0,
+                                        ),
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 20),
+                                                child: Align(
+                                                  alignment: Alignment.topLeft,
+                                                  child: Text(
+                                                    activities,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    maxLines: 2,
+                                                    textAlign: TextAlign.left,
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                          // ElevatedButton(
-                                          //   onPressed: () async {
-                                          //     _clickedIndex.value = index;
-                                          //     var weatherReportRes =
-                                          //         await WeatherApi
-                                          //             .getWeatherReport(
-                                          //                 double.parse(
-                                          //                     logitude),
-                                          //                 double.parse(
-                                          //                     latitude),
-                                          //                 formattedatefrom,
-                                          //                 formattedateto);
-                                          //     print(weatherReportRes);
+                                            // ElevatedButton(
+                                            //   onPressed: () async {
+                                            //     _clickedIndex.value = index;
+                                            //     var weatherReportRes =
+                                            //         await WeatherApi
+                                            //             .getWeatherReport(
+                                            //                 double.parse(
+                                            //                     logitude),
+                                            //                 double.parse(
+                                            //                     latitude),
+                                            //                 formattedatefrom,
+                                            //                 formattedateto);
+                                            //     print(weatherReportRes);
 
-                                          //     updateDocument(documentId,
-                                          //         user!.uid, weatherReportRes);
-                                          //     _clickedIndex.value = -1;
-                                          //   },
-                                          //   child: ValueListenableBuilder<int>(
-                                          //     valueListenable: _clickedIndex,
-                                          //     builder: (context, value, child) {
-                                          //       return Text(
-                                          //         value == index
-                                          //             ? "Updating..."
-                                          //             : "Refresh",
-                                          //       );
-                                          //     },
-                                          //   ),
-                                          // )
-                                          ElevatedButton(
-                                            onPressed: _clickedIndices
-                                                    .contains(index)
-                                                ? null // Disable button if already clicked
-                                                : () async {
-                                                    // Add index to set
-                                                    _clickedIndices.add(index);
-                                                    _refreshNotifier.value =
-                                                        !_refreshNotifier
-                                                            .value; // Trigger rebuild
-                                                    var weatherReportRes =
-                                                        await WeatherApi
-                                                            .getWeatherReport(
-                                                                double.parse(
-                                                                    logitude),
-                                                                double.parse(
-                                                                    latitude),
-                                                                formattedatefrom,
-                                                                formattedateto);
-                                                    print(weatherReportRes);
-                                                    // Update document
-                                                    updateDocument(
-                                                        documentId,
-                                                        user!.uid,
-                                                        weatherReportRes);
-                                                    // Remove index from set after update
+                                            //     updateDocument(documentId,
+                                            //         user!.uid, weatherReportRes);
+                                            //     _clickedIndex.value = -1;
+                                            //   },
+                                            //   child: ValueListenableBuilder<int>(
+                                            //     valueListenable: _clickedIndex,
+                                            //     builder: (context, value, child) {
+                                            //       return Text(
+                                            //         value == index
+                                            //             ? "Updating..."
+                                            //             : "Refresh",
+                                            //       );
+                                            //     },
+                                            //   ),
+                                            // )
+                                            ElevatedButton(
+                                              onPressed: _clickedIndices
+                                                      .contains(index)
+                                                  ? null // Disable button if already clicked
+                                                  : () async {
+                                                      // Add index to set
+                                                      _clickedIndices
+                                                          .add(index);
+                                                      _refreshNotifier.value =
+                                                          !_refreshNotifier
+                                                              .value; // Trigger rebuild
+                                                      var weatherReportRes =
+                                                          await WeatherApi
+                                                              .getWeatherReport(
+                                                                  double.parse(
+                                                                      logitude),
+                                                                  double.parse(
+                                                                      latitude),
+                                                                  formattedatefrom,
+                                                                  formattedateto);
+                                                      print(weatherReportRes);
+                                                      // Update document
+                                                      updateDocument(
+                                                          documentId,
+                                                          user!.uid,
+                                                          weatherReportRes);
+                                                      // Remove index from set after update
+                                                      _clickedIndices
+                                                          .remove(index);
+                                                      _refreshNotifier.value =
+                                                          !_refreshNotifier
+                                                              .value;
+                                                    },
+                                              child:
+                                                  ValueListenableBuilder<bool>(
+                                                valueListenable:
+                                                    _refreshNotifier,
+                                                builder:
+                                                    (context, value, child) {
+                                                  return Text(
                                                     _clickedIndices
-                                                        .remove(index);
-                                                    _refreshNotifier.value =
-                                                        !_refreshNotifier.value;
-                                                  },
-                                            child: ValueListenableBuilder<bool>(
-                                              valueListenable: _refreshNotifier,
-                                              builder: (context, value, child) {
-                                                return Text(
-                                                  _clickedIndices
-                                                          .contains(index)
-                                                      ? "Updating..."
-                                                      : "Refresh",
-                                                );
-                                              },
-                                            ),
-                                          )
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                )
-                              ],
+                                                            .contains(index)
+                                                        ? "Updating..."
+                                                        : "Refresh",
+                                                  );
+                                                },
+                                              ),
+                                            )
+                                          ],
+                                        )
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
                           ),
                         );

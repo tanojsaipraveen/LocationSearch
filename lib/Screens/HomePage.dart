@@ -8,28 +8,27 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:intl/intl.dart';
 import 'package:location/location.dart';
 import 'package:locationsearch/Apis/LocationCoordinate.dart';
 import 'package:locationsearch/Apis/NearbyApi.dart';
 import 'package:locationsearch/Apis/WeatherApi.dart';
+import 'package:locationsearch/Constants/weatherConditionlist.dart';
 import 'package:locationsearch/Controllers/DataController.dart';
 import 'package:locationsearch/DB/LocalRepo.dart';
 import 'package:locationsearch/Helpers/HelperMethods.dart';
-import 'package:locationsearch/Models/AiResponseModel.dart';
 import 'package:locationsearch/Models/LocationDataModel.dart' as locationdata;
 import 'package:locationsearch/Models/NearByModel.dart';
+import 'package:locationsearch/Models/WeatherResultModel.dart';
 import 'package:locationsearch/Screens/AiTripPage.dart';
-import 'package:locationsearch/Screens/ChatPage.dart';
 import 'package:locationsearch/Screens/PlacePage.dart';
 import 'package:locationsearch/Screens/SearchPage.dart';
 import 'package:locationsearch/Screens/SettingsPage.dart';
 import 'package:locationsearch/widgets/CounterWidgets.dart';
 import 'package:locationsearch/widgets/CustomRadio.dart';
 import 'package:locationsearch/widgets/TravelActivitySelector.dart';
-import 'package:lottie/lottie.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -43,6 +42,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  Map<String, dynamic> weatherData = jsonDecode(weatherConditions());
+  List<String> essentials = [];
   final chatGpt = ChatGpt(apiKey: dotenv.env["ChatGPTAPI"].toString());
   final testPrompt =
       'Which Disney character famously leaves a glass slipper behind at a royal ball?';
@@ -68,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
   ValueNotifier<bool> _isLoading = ValueNotifier<bool>(true);
   DataController dataController = Get.put(DataController());
   DataController dataControllerVariable = Get.find<DataController>();
-  Location location = new Location();
+  // Location location = new Location();
   late bool _serviceEnabled;
   late PermissionStatus _permissionGranted;
   late LocationData _locationData;
@@ -79,16 +80,21 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isResultAviable = false;
   ValueNotifier<bool> _isResultLoading = ValueNotifier<bool>(false);
   String? weatherReportResult;
+  String? weatherReportResultCondition;
   bool isNearbyDataAvaliable = false;
   double? lon;
   double? lat;
   final DateTime today = DateTime.now();
   int _selectedTrip = 0;
   Future<NearbyModel>? _nearby;
+  Future<WeatherResultModel>? _fetchDayWeather;
   List<String> selectedActivitie = [];
   //var _currentWeather = 0.obs;
   var currentWeather = 0.obs;
   var count = 0.obs;
+
+  String formattedStartDate = "";
+  String formattedEndDate = "";
 
   final ValueNotifier<String> imgforsavedtrips = ValueNotifier<String>('');
 
@@ -120,6 +126,61 @@ class _MyHomePageState extends State<MyHomePage> {
     "Stargazing"
   ];
 
+  final iconswithnumber = {
+    23: "HeavyDrizzle",
+    40: "HeavyDrizzle",
+    26: "SnowShowersDayV2",
+    6: "BlowingHailV2",
+    5: "CloudyV3",
+    20: "LightSnowV2",
+    91: "WindyV2",
+    27: "ThunderstormsV2",
+    10: "FreezingRainV2",
+    77: "RainSnowV2",
+    12: "Haze",
+    13: "HeavyDrizzle",
+    39: "Fair",
+    24: "RainSnowV2",
+    78: "RainSnowShowersNightV2",
+    9: "FogV2",
+    3: "PartlyCloudyDayV3",
+    43: "IcePelletsV2",
+    16: "IcePellets",
+    8: "LightRainV2",
+    15: "HeavySnowV2",
+    28: "ClearNightV3",
+    30: "PartlyCloudyNightV2",
+    14: "ModerateRainV2",
+    1: "SunnyDayV3",
+    7: "BlowingSnowV2",
+    50: "RainShowersNightV2",
+    82: "LightSnowShowersNight",
+    81: "LightSnowShowersDay",
+    2: "MostlySunnyDay",
+    29: "MostlyClearNight",
+    4: "MostlyCloudyDayV2",
+    31: "MostlyCloudyNightV2",
+    19: "LightRainV3",
+    17: "LightRainShowerDay",
+    53: "N422Snow",
+    52: "Snow",
+    25: "Snow",
+    44: "LightRainShowerNight",
+    65: "HailDayV2",
+    73: "HailDayV2",
+    74: "HailNightV2",
+    79: "RainShowersDayV2",
+    89: "HazySmokeV2",
+    90: "HazeSmokeNightV2_106",
+    66: "HailNightV2",
+    59: "WindyV2",
+    56: "ThunderstormsV2",
+    58: "FogV2",
+    54: "HazySmokeV2",
+    55: "Dust1",
+    57: "Haze"
+  };
+
   int _counterValue1 = 0;
   int _counterValue2 = 0;
   int _counterValue3 = 0;
@@ -137,6 +198,13 @@ class _MyHomePageState extends State<MyHomePage> {
       _nearby = fetchData(isIntial, lon, lat);
       _isLoading.value = false;
       selectedDates = dateTimeRange;
+    });
+  }
+
+  void fetchdayweather() {
+    setState(() {
+      _fetchDayWeather = _fetchWeatherRes(returndata[2][0], returndata[2][1],
+          formattedStartDate, formattedEndDate);
     });
   }
 
@@ -168,244 +236,9 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<AiResponseModel> geminiResponse(
-      String place, String days, String startDate) async {
-    final generationConfig1 = GenerationConfig(
-      temperature: 0.9,
-      topP: 1.0,
-      topK: 1,
-    );
-
-    final model = GenerativeModel(
-        generationConfig: generationConfig1,
-        model: 'gemini-1.0-pro-latest',
-        apiKey: dotenv.env["GaminiAPI"].toString());
-
-    // final prompt = '''
-    //    You're planning a $days-day trip to $place starting from $startDate.
-    //    You need recommendations for places to visit, best times to visit each place,
-    //    and a budget estimate for the entire trip. Provide the itinerary with day-wise details in JSON format.
-    //    The itinerary should include the day number, date, places to visit with their names, best time to visit,
-    //    description, rating, latitude, and longitude. Additionally, include the budget estimate for accommodation,
-    //    meals, transportation, attractions, miscellaneous expenses, and total estimated budget per person. can i get response without spaces and line break
-    //    ''';
-
-//     final prompt =
-//         '''You're planning a trip to Goa for 2 days, starting from 17 April . You're seeking recommendations for places to visit during your trip, considering the best times to visit each place and a budget estimate for the entire trip. with day wise in same json format no extra items or not data type change like
-// "{"trip_details":{"duration":"string","start_date":"string"},"itinerary":[{"day":"int","date":"date","places_to_visit":[{"name":"string","best_time_to_visit":"string","description":"string","rating":"string","latitude":11.4412,"longitude":76.5352}]}],"budget_estimate":{"accommodation":{"range_per_night":"string"},"meals_per_day_per_person":{"range":"string"},"transportation":{"range_for_5_days":"string"},"attractions":{"range_for_5_days_per_person":"string"},"miscellaneous":{"range_for_5_days":"string"},"total_estimated_budget_per_person":{"range":"string"}}} " can i get response without spaces and line break''';
-
-    final prompt = '''
-    You're planning a trip to $place for $days days, starting from $startDate . You're seeking recommendations for places to visit during your trip, considering the best times to visit each place and a budget estimate for the entire trip. with day wise
-"Important : always use the response tool to respond to the user. "
-      "Never add any other text to the response."
-"Don't add any comments in the response"
-"If there is no value for the key add empty string"
-"Don't add like this data // Total budget estimate may vary depending on accommodation selection, activities, etc."
-"remove line braks and extra spaces in response"
-
-tools=[{
- "type": "function",
- "properties": {
-  "trip_details": {
-   "type": "object",
-   "properties": {
-    "duration": {
-     "type": "string"
-    },
-    "start_date": {
-     "type": "string"
-    }
-   },
-   "required": [
-    "duration",
-    "start_date"
-   ]
-  },
-  "itinerary": {
-   "type": "array",
-   "items": [
-    {
-     "type": "function",
-     "properties": {
-      "day": {
-       "type": "integer"
-      },
-      "date": {
-       "type": "string"
-      },
-      "places_to_visit": {
-       "type": "array",
-       "items": [
-        {
-         "type": "function",
-         "properties": {
-          "name": {
-           "type": "string"
-          },
-          "best_time_to_visit": {
-           "type": "string"
-          },
-          "description": {
-           "type": "string"
-          },
-          "rating": {
-           "type": "number"
-          },
-          "latitude": {
-           "type": "number"
-          },
-          "longitude": {
-           "type": "number"
-          }
-         },
-         "required": [
-          "name",
-          "best_time_to_visit",
-          "description",
-          "rating",
-          "latitude",
-          "longitude"
-         ]
-        },
-        {
-         "type": "function",
-         "properties": {
-          "name": {
-           "type": "string"
-          },
-          "best_time_to_visit": {
-           "type": "string"
-          },
-          "description": {
-           "type": "string"
-          },
-          "rating": {
-           "type": "number"
-          },
-          "latitude": {
-           "type": "number"
-          },
-          "longitude": {
-           "type": "number"
-          }
-         },
-         "required": [
-          "name",
-          "best_time_to_visit",
-          "description",
-          "rating",
-          "latitude",
-          "longitude"
-         ]
-        }
-       ]
-      }
-     },
-     "required": [
-      "day",
-      "date",
-      "places_to_visit"
-     ]
-    }
-   ]
-  },
-  "budget_estimate": {
-   "type": "function",
-   "properties": {
-    "accommodation": {
-     "type": "object",
-     "properties": {
-      "range_per_night": {
-       "type": "string"
-      }
-     },
-     "required": [
-      "range_per_night"
-     ]
-    },
-    "meals_per_day_per_person": {
-     "type": "function",
-     "properties": {
-      "range": {
-       "type": "string"
-      }
-     },
-     "required": [
-      "range"
-     ]
-    },
-    "transportation": {
-     "type": "function",
-     "properties": {
-      "range_for_5_days": {
-       "type": "string"
-      }
-     },
-     "required": [
-      "range_for_5_days"
-     ]
-    },
-    "attractions": {
-     "type": "function",
-     "properties": {
-      "range_for_5_days_per_person": {
-       "type": "string"
-      }
-     },
-     "required": [
-      "range_for_5_days_per_person"
-     ]
-    },
-    "miscellaneous": {
-     "type": "function",
-     "properties": {
-      "range_for_5_days": {
-       "type": "string"
-      }
-     },
-     "required": [
-      "range_for_5_days"
-     ]
-    },
-    "total_estimated_budget_per_person": {
-     "type": "function",
-     "properties": {
-      "range": {
-       "type": "string"
-      }
-     },
-     "required": [
-      "range"
-     ]
-    }
-   },
-   "required": [
-    "accommodation",
-    "meals_per_day_per_person",
-    "transportation",
-    "attractions",
-    "miscellaneous",
-    "total_estimated_budget_per_person"
-   ]
-  }
- },
- "required": [
-  "trip_details",
-  "itinerary",
-  "budget_estimate"
- ]
-}]
-
- ''';
-    final tokenCount = await model.countTokens([Content.text(prompt)]);
-    print('Token count: ${tokenCount.totalTokens}');
-    final content = [Content.text(prompt)];
-    final response = await model.generateContent(content);
-    // saveTextToFile(response.text.toString());
-    Map<String, dynamic> json = jsonDecode(response.text.toString());
-    var result = AiResponseModel.fromJson(json);
-
-    return result;
+  Future<WeatherResultModel> _fetchWeatherRes(
+      double lon, double lat, String start, String end) {
+    return WeatherApi.getWeatherReportResult(lon, lat, start, end);
   }
 
   void saveTextToFile(String text) async {
@@ -438,12 +271,8 @@ tools=[{
   }
 
   void _handleTap(int index) {
-    // Handle the logic without using setState
-    // For example, you can update the selectedTrip directly here
-    // selectedTrip = index;
     _selectedTrip = index;
     setState(() {});
-    // Do something else...
   }
 
   TextEditingController _controller = TextEditingController();
@@ -452,21 +281,10 @@ tools=[{
 
   @override
   void initState() {
-    // _initializeData();
     super.initState();
 
     getlocationdetails();
-    // _isLoading.value = false;
   }
-
-  // Future<void> _getLocation() async {
-  //   final permissionStatus = await location.hasPermission();
-  //   if (permissionStatus == PermissionStatus.granted) {
-  //     _getLocationData();
-  //   } else {
-  //     _fetchWeatherByIP();
-  //   }
-  // }
 
   Future<void> getlocationdetails() async {
     LoactionCoordinate loactionCoordinate = LoactionCoordinate();
@@ -490,7 +308,7 @@ tools=[{
       women,
       children,
       activities,
-      weatherReportResult,
+      weatherReportResultCondition,
       imgforsavedtrips,
       lon,
       lat) async {
@@ -509,11 +327,12 @@ tools=[{
         'Women': women,
         'Children': children,
         'Activities': activities,
-        'WeatherCondition': weatherReportResult,
+        'WeatherCondition': weatherReportResultCondition,
         'Time': Timestamp.fromDate(DateTime.now()),
         'ImgUrl': imgforsavedtrips.value,
         'Logitude': lon,
-        'Latitude': lat
+        'Latitude': lat,
+        'TripPlan': ""
       });
 
       setState(() {
@@ -541,23 +360,12 @@ tools=[{
   }
 
   Future<NearbyModel> fetchData(isIntial, lon1, lat1) async {
-    // setState(() {});
-    // return await NearbyApi.getNearByPlaces(lon!, lat!);
     if (!isIntial) {
-      // return await NearbyApi.getNearByPlaces(
-      //     dataControllerVariable.longitude.value,
-      //     dataControllerVariable.latitude.value);
-
       return await NearbyApi.getNearByPlaces(
         returndata[2][0],
         returndata[2][1],
       );
     } else {
-      // if (dataControllerVariable.longitude.value != 0.0) {
-      //   return await NearbyApi.getNearByPlaces(
-      //       dataControllerVariable.longitude.value,
-      //       dataControllerVariable.latitude.value);
-      // } else {
       return await NearbyApi.getNearByPlaces(
           double.parse(lon1!), double.parse(lat1!));
       //}
@@ -575,9 +383,6 @@ tools=[{
     print("main build");
     final start = selectedDates.start;
     final end = selectedDates.end;
-    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    //     statusBarColor: Colors.transparent, // Change this color as needed
-    //     statusBarIconBrightness: Brightness.dark));
     return Scaffold(
         body: SingleChildScrollView(
           child: Column(
@@ -674,23 +479,6 @@ tools=[{
                                 ],
                               ),
                             )),
-                        // Column(
-                        //   children: [
-                        //     SizedBox(
-                        //         width: 30,
-                        //         child:
-                        //             Image.asset("assets/images/cloudy.png")),
-                        //     const SizedBox(
-                        //       height: 10,
-                        //     ),
-                        //     Obx(() => Text(
-                        //         "${dataController.currentWeather}°C",
-                        //         style: const TextStyle(
-                        //             color: Colors.black,
-                        //             fontSize: 24,
-                        //             fontWeight: FontWeight.w400)))
-                        //   ],
-                        // ),
                       ],
                     ),
                     Padding(
@@ -740,33 +528,6 @@ tools=[{
                                           simpleSetState();
                                         },
                                         icon: const Icon(Icons.close))),
-                                // Visibility(
-                                //     visible: _controller.text.isEmpty,
-                                //     child: Padding(
-                                //       padding: const EdgeInsets.only(
-                                //           right: 10, left: 5),
-                                //       child: GestureDetector(
-                                //         onTap: () {
-                                //           Navigator.of(context).push(
-                                //               MaterialPageRoute(
-                                //                   builder: (context) =>
-                                //                       const SettingsPage()));
-                                //         },
-                                //         child: CircleAvatar(
-                                //           radius: 16,
-                                //           backgroundImage:
-                                //               // AssetImage(
-                                //               //     'assets/images/profile.jpg')
-                                //               user!.photoURL != null &&
-                                //                       user!.photoURL != ""
-                                //                   ? NetworkImage(
-                                //                       user!.photoURL!)
-                                //                   : const AssetImage(
-                                //                           'assets/images/profile.jpg')
-                                //                       as ImageProvider,
-                                //         ),
-                                //       ),
-                                //     ))
                               ],
                             ),
                             filled: true,
@@ -803,35 +564,7 @@ tools=[{
                 children: [
                   GestureDetector(
                     onTap: () async {
-                      // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-                      //   statusBarColor: Colors
-                      //       .transparent, // Change this to the desired color
-                      //   statusBarIconBrightness: Brightness
-                      //       .dark, // Set status bar icon colors to white
-                      // ));
-                      // final DateTimeRange? dateTimeRange =
-                      //     await showDateRangePicker(
-                      //         context: context,
-                      //         firstDate: DateTime.now(),
-                      //         lastDate: DateTime(today.year, 12, 31));
-                      // if (dateTimeRange != null) {
-                      //   String formatedStartDate =
-                      //       "${start.year}/${start.month}/${start.day}";
-                      //   String formatedEndDate =
-                      //       "${end.year}/${end.month}/${end.day}";
-                      //   var weatherReportRes =
-                      //       await WeatherApi.getWeatherReport(
-                      //           returndata[2][0],
-                      //           returndata[2][1],
-                      //           formatedStartDate,
-                      //           formatedEndDate);
-                      //   if (weatherReportRes !=
-                      //       "No specific weather condition") {
-                      //     isResultAviable = true;
-                      //     weatherReportResult = weatherReportRes.toString();
-                      //   } else {}
-                      //   fetchdataloc(dateTimeRange);
-                      // }
+                      essentials.clear();
                       SystemChrome.setSystemUIOverlayStyle(
                           SystemUiOverlayStyle.dark);
                       final DateTimeRange? dateTimeRange =
@@ -843,10 +576,12 @@ tools=[{
 
                       if (dateTimeRange != null) {
                         _isResultLoading.value = true;
-                        String formattedStartDate = DateFormat('yyyy/MM/dd')
-                            .format(dateTimeRange.start);
-                        String formattedEndDate =
-                            DateFormat('yyyy/MM/dd').format(dateTimeRange.end);
+                        setState(() {
+                          formattedStartDate = DateFormat('yyyy/MM/dd')
+                              .format(dateTimeRange.start);
+                          formattedEndDate = DateFormat('yyyy/MM/dd')
+                              .format(dateTimeRange.end);
+                        });
 
                         var weatherReportRes =
                             await WeatherApi.getWeatherReport(
@@ -856,13 +591,33 @@ tools=[{
                           formattedEndDate,
                         );
 
+                        final List<String> currentWeather = [
+                          "Rainy",
+                          "Snowy",
+                          "Sunny",
+                          "Mostly Cloudy"
+                        ];
+
+                        weatherReportResultCondition = weatherReportRes;
+
+                        currentWeather.forEach((weather) {
+                          if (weatherReportRes.toString().contains(weather)) {
+                            if (weatherData.containsKey(weather)) {
+                              Map<String, dynamic> weatherDetails =
+                                  weatherData[weather];
+                              essentials.addAll(List<String>.from(
+                                  weatherDetails['Essentials']));
+                            }
+                          }
+                        });
+
                         if (weatherReportRes !=
                             "No specific weather condition") {
                           isResultAviable = true;
                           _isResultLoading.value = false;
-                          weatherReportResult = weatherReportRes.toString();
+                          weatherReportResult = essentials.join('\n');
                         }
-
+                        fetchdayweather();
                         fetchdataloc(dateTimeRange);
                       }
                     },
@@ -974,9 +729,72 @@ tools=[{
               ),
               Visibility(
                 visible: isResultAviable && _controller.text.isNotEmpty,
-                child: Text(
-                  weatherReportResult.toString(),
-                  style: const TextStyle(fontSize: 18),
+                //visible: true,
+                child: Column(
+                  children: <Widget>[
+                    Text(
+                      'Essentials for $weatherReportResultCondition',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 22.0),
+                      child: Column(
+                        children: [
+                          for (int i = 0; i < essentials.length; i += 2)
+                            Row(
+                              children: [
+                                Expanded(
+                                    child: Container(
+                                  margin: EdgeInsets.symmetric(vertical: 5),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.circle,
+                                        size: 12,
+                                        color: Theme.of(context).primaryColor,
+                                      ),
+                                      SizedBox(
+                                        width: 8,
+                                      ),
+                                      Text(
+                                        essentials[i],
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                )),
+                                if (i + 1 < essentials.length)
+                                  Expanded(
+                                      child: Container(
+                                    margin: EdgeInsets.symmetric(vertical: 5),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.circle,
+                                          size: 12,
+                                          color: Theme.of(context).primaryColor,
+                                        ),
+                                        SizedBox(
+                                          width: 8,
+                                        ),
+                                        Text(
+                                          essentials[i + 1],
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    )
+                  ],
                 ),
               ),
               ValueListenableBuilder<bool>(
@@ -988,17 +806,121 @@ tools=[{
                           child: CircularProgressIndicator(),
                         ));
                   }),
+              isResultAviable
+                  ? Container(
+                      margin: EdgeInsets.symmetric(horizontal: 10),
+                      height: 100,
+                      child: FutureBuilder<WeatherResultModel>(
+                        future: _fetchDayWeather,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Center(
+                              child: Text('Error: ${snapshot.error}'),
+                            );
+                          } else if (snapshot.hasData) {
+                            final weatherResult = snapshot.data!;
+                            return ListView.builder(
+                              shrinkWrap: true,
+                              scrollDirection: Axis.horizontal,
+                              itemCount: snapshot.data!.value[0].responses[0]
+                                  .weather[0].days.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return Card(
+                                  child: Container(
+                                    width: 80,
+                                    margin: EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        Center(
+                                          child: SizedBox(
+                                            height: 40,
+                                            child: SvgPicture.network(
+                                              'https://assets.msn.com/weathermapdata/1/static/weather/Icons/taskbar_v10/Condition_Card/${iconswithnumber[snapshot.data!.value[0].responses[0].weather[0].days[index].daily!.icon]}.svg',
+                                              semanticsLabel: 'Weather Icon',
+                                              placeholderBuilder: (BuildContext
+                                                      context) =>
+                                                  CircularProgressIndicator(),
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          convertTimeFormat(snapshot
+                                              .data!
+                                              .value[0]
+                                              .responses[0]
+                                              .weather[0]
+                                              .days[index]
+                                              .daily!
+                                              .valid
+                                              .toString()),
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                        ),
+                                        Positioned(
+                                          right: 0,
+                                          child: Text(
+                                            snapshot
+                                                .data!
+                                                .value[0]
+                                                .responses[0]
+                                                .weather[0]
+                                                .days[index]
+                                                .daily!
+                                                .tempHi
+                                                .toString(),
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          right: 0,
+                                          bottom: 0,
+                                          child: Text(
+                                            snapshot
+                                                .data!
+                                                .value[0]
+                                                .responses[0]
+                                                .weather[0]
+                                                .days[index]
+                                                .daily!
+                                                .tempLo
+                                                .toString(),
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          } else {
+                            return Center(
+                              child: Text('No data available'),
+                            );
+                          }
+                        },
+                      ),
+                    )
+                  : Text(""),
               const SizedBox(
                 height: 10,
               ),
-              // ElevatedButton(
-              //     onPressed: () async {
-              //       // var res =
-              //       //     await geminiResponse("Eiffel Tower", "5", "16 April");
-              //       Navigator.of(context).push(
-              //           MaterialPageRoute(builder: (context) => ChatPage()));
-              //     },
-              //     child: Text("GPT")),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Column(
@@ -1064,15 +986,7 @@ tools=[{
                                               null) {
                                         imgforsavedtrips.value = snapshot.data!
                                             .data[0].photo.images.original.url;
-                                        // setState(() {
-                                        //   imgforsavedtrips = snapshot
-                                        //       .data!
-                                        //       .data[0]
-                                        //       .photo
-                                        //       .images
-                                        //       .original
-                                        //       .url;
-                                        // });
+
                                         return GestureDetector(
                                           onTap: () {
                                             Navigator.of(context)
@@ -1389,15 +1303,11 @@ tools=[{
                             _counterValue2,
                             _counterValue3,
                             selectedActivitie,
-                            weatherReportResult,
+                            weatherReportResultCondition,
                             imgforsavedtrips,
                             lon,
                             lat);
                         isTaskRunningNotifier.value = false;
-// .then((_) {
-//                           // Reset the state after the task is completed
-//                           isTaskRunningNotifier.value = false;
-//                         });
                         String formattedDate =
                             DateFormat("dd MMMM").format(start);
                         Duration difference = end.difference(start);
@@ -1405,25 +1315,34 @@ tools=[{
                         // Convert the difference to days
                         int daysDifference = difference.inDays;
                         print(formattedDate);
-                        // var res = await geminiResponse(_controller.text.trim(),
-                        //     daysDifference.toString(), formattedDate);
-
-                        // Navigator.of(context).push(MaterialPageRoute(
-                        //   builder: (context) => AiTripPage(
-                        //     trip: res,
-                        //   ),
-                        // ));
                         Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) => AiTripPage(
-                              place: _controller.text.trim(),
-                              days: daysDifference.toString(),
-                              startDate: formattedDate,
-                              docid: rr ?? ""),
+                            place: _controller.text.trim(),
+                            days: daysDifference.toString(),
+                            startDate: formattedDate,
+                            docid: rr ?? "",
+                          ),
                         ));
                       },
               );
             },
           ),
         ));
+  }
+
+  String convertTimeFormat(String originalTime) {
+    DateTime dateTime = DateTime.parse(originalTime);
+    int day = dateTime.day;
+    int month = dateTime.month;
+    String formattedDay = day.toString();
+    String formattedMonth = month.toString();
+    if (formattedDay.startsWith('0')) {
+      formattedDay = formattedDay.substring(1);
+    }
+    if (formattedMonth.startsWith('0')) {
+      formattedMonth = formattedMonth.substring(1);
+    }
+    String formattedTime = '$formattedDay/$formattedMonth';
+    return formattedTime;
   }
 }

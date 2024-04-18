@@ -1,176 +1,42 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:locationsearch/Constants/Prompt.dart';
-import 'package:locationsearch/Models/AiResponseModel.dart';
-import 'package:locationsearch/Screens/PlacePage.dart';
-import 'package:lottie/lottie.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:locationsearch/Models/AiResponseModel.dart';
+import 'package:lottie/lottie.dart';
 
-class AiTripPage extends StatefulWidget {
-  final String place;
-  final String days;
-  final String startDate;
-  final String docid;
+import 'PlacePage.dart';
 
-  AiTripPage({
+class OfflineAiTripPage extends StatefulWidget {
+  final String jsonData;
+
+  OfflineAiTripPage({
     Key? key,
-    required this.place,
-    required this.days,
-    required this.startDate,
-    required this.docid,
+    required this.jsonData,
   }) : super(key: key);
 
   @override
-  State<AiTripPage> createState() => _AiTripPageState();
+  State<OfflineAiTripPage> createState() => _OfflineAiTripPageState();
 }
 
-class _AiTripPageState extends State<AiTripPage> {
+class _OfflineAiTripPageState extends State<OfflineAiTripPage> {
   final user = FirebaseAuth.instance.currentUser;
   AiResponseModel? trip;
   bool isLoading = false;
-
   @override
   void initState() {
+    // TODO: implement initState
+
+    String jsonString = widget.jsonData;
+
+    // Convert string to map
+    Map<String, dynamic> jsonMap = json.decode(jsonString);
+
+    // Convert map to YourModel instance
+    trip = AiResponseModel.fromJson(jsonMap);
+
     super.initState();
-    // Fetch data when the page loads
-    fetchData();
-  }
-
-  Future<void> fetchData() async {
-    setState(() {
-      isLoading = true; // Show circular progress indicator
-    });
-
-    try {
-      // Call your AI service to fetch data
-
-      String res1 =
-          await geminiResponse(widget.place, widget.days, widget.startDate);
-
-      Map<String, dynamic> json = jsonDecode(res1);
-      AiResponseModel response = AiResponseModel.fromJson(json);
-      AILogs(res1);
-      updateDocument(widget.docid, user!.uid, res1);
-      setState(() {
-        // Update the trip model with the fetched data
-        trip = response;
-        isLoading = false; // Hide circular progress indicator
-      });
-    } catch (e) {
-      print("Error fetching data: $e");
-      // Handle error appropriately, e.g., show an error message
-      setState(() {
-        isLoading = false; // Hide circular progress indicator on error
-      });
-    }
-  }
-
-  void updateDocument(documentId, userid, tripplan) async {
-    // Reference to the document you want to update
-    DocumentReference documentRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userid)
-        .collection('UserData')
-        .doc(documentId);
-
-    try {
-      await documentRef.update({
-        'TripPlan': tripplan,
-      });
-      print('Document updated successfully.');
-    } catch (e) {
-      print('Error updating document: $e');
-    }
-  }
-
-  void AILogs(String res) async {
-    DocumentReference docRef =
-        await FirebaseFirestore.instance.collection('log').add({'data': res});
-  }
-
-  void saveTextToFile(String text) async {
-    final Directory directory = await getApplicationDocumentsDirectory();
-    final File file = File('${directory.path}/my_text_file.txt');
-
-    await file.writeAsString(text);
-  }
-
-  Future<String> geminiResponse(
-      String place, String days, String startDate) async {
-    final generationConfig1 = GenerationConfig(
-      temperature: 0.9,
-      topP: 1.0,
-      topK: 1,
-    );
-
-    final model = GenerativeModel(
-        generationConfig: generationConfig1,
-        model: 'gemini-1.0-pro-latest',
-        apiKey: dotenv.env["GaminiAPI"].toString());
-    final prompt = getprompt(place, days, startDate);
-
-    // final tokenCount = await model.countTokens([Content.text(prompt)]);
-    // print('Token count: ${tokenCount.totalTokens}');
-    // final content = [Content.text(prompt)];
-    // final response = await model.generateContent(content);
-    // Map<String, dynamic> json = jsonDecode(response.text.toString());
-    // var result = AiResponseModel.fromJson(json);
-    // return response.text.toString();
-
-    return await yourFunctionNameWithRetry(prompt, model);
-    // try {
-    //   final tokenCount = await model.countTokens([Content.text(prompt)]);
-    //   print('Token count: ${tokenCount.totalTokens}');
-    //   final content = [Content.text(prompt)];
-    //   final response = await model.generateContent(content);
-    //   Map<String, dynamic> json = jsonDecode(response.text.toString());
-    //   var result = AiResponseModel.fromJson(json);
-    //   return response.text.toString();
-    // } catch (e) {
-    //   print('An error occurred: $e');
-    //   // Handle the error here, you can return a default value or rethrow the exception
-    //   return ''; // or throw e; or any other appropriate handling
-    // }
-  }
-
-  Future<String> yourFunctionNameWithRetry(String prompt, dynamic model) async {
-    int maxRetries = 3;
-    int retryCount = 0;
-    String result = '';
-
-    while (retryCount < maxRetries) {
-      try {
-        final tokenCount = await model.countTokens([Content.text(prompt)]);
-        print('Token count: ${tokenCount.totalTokens}');
-        final content = [Content.text(prompt)];
-        final response = await model.generateContent(content);
-        saveTextToFile(response.text.toString());
-        AILogs(response.text.toString());
-        Map<String, dynamic> json = jsonDecode(response.text.toString());
-        var resultModel = AiResponseModel.fromJson(json);
-        result = response.text.toString();
-        break; // If execution reached here, no exception occurred, break out of the loop
-      } catch (e) {
-        print('An error occurred: $e');
-        retryCount++;
-        if (retryCount == maxRetries) {
-          print('Max retry attempts reached.');
-          // Handle the error here, you can return a default value or rethrow the exception
-          result = ''; // or throw e; or any other appropriate handling
-        } else {
-          print('Retrying...');
-        }
-      }
-    }
-
-    return result;
   }
 
   @override
@@ -197,7 +63,7 @@ class _AiTripPageState extends State<AiTripPage> {
                         fit: BoxFit.fill),
                   )
                 : trip == null
-                    ? Center(
+                    ? const Center(
                         child: Text(
                             'No data available'), // Show message if no data available
                       )
@@ -218,11 +84,11 @@ class _AiTripPageState extends State<AiTripPage> {
                                       children: [
                                         Text(
                                           'Day ${day.day} - ${day.date}',
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                               fontSize: 24,
                                               fontWeight: FontWeight.bold),
                                         ),
-                                        SizedBox(
+                                        const SizedBox(
                                           height: 20,
                                         ),
                                         Column(
@@ -236,37 +102,19 @@ class _AiTripPageState extends State<AiTripPage> {
                                               children: [
                                                 Text(
                                                   '${place.name}',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                       fontSize: 22,
                                                       fontWeight:
                                                           FontWeight.bold),
                                                 ),
                                                 Text(
                                                   'Best Time to Visit: ${place.bestTimeToVisit}',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                       fontSize: 13,
                                                       fontWeight:
                                                           FontWeight.normal,
                                                       color: Colors.black54),
                                                 ),
-                                                // Row(
-                                                //   children: [
-                                                //     SizedBox(
-                                                //       width: 15,
-                                                //       child: Image.asset(
-                                                //           'assets/images/star1.png'),
-                                                //     ),
-                                                //     SizedBox(
-                                                //       width: 5,
-                                                //     ),
-                                                //     // Text(
-                                                //     //   place.rating.toString(),
-                                                //     //   style: TextStyle(
-                                                //     //       fontSize: 13),
-                                                //     // ),
-
-                                                //   ],
-                                                // ),
                                                 RatingBarIndicator(
                                                   rating: double.parse(
                                                       place.rating.toString()),
@@ -274,19 +122,19 @@ class _AiTripPageState extends State<AiTripPage> {
                                                   direction: Axis.horizontal,
                                                   itemCount: 5,
                                                   itemBuilder: (context, _) =>
-                                                      Icon(
+                                                      const Icon(
                                                     Icons.star,
                                                     color: Colors.amber,
                                                   ),
                                                 ),
-                                                SizedBox(
+                                                const SizedBox(
                                                   height: 10,
                                                 ),
                                                 Text(
                                                   '${place.description}',
                                                 ),
 
-                                                SizedBox(
+                                                const SizedBox(
                                                   height: 20,
                                                 ),
                                                 Align(
@@ -313,7 +161,7 @@ class _AiTripPageState extends State<AiTripPage> {
                                                               BorderRadius
                                                                   .circular(
                                                                       20)),
-                                                      child: Row(
+                                                      child: const Row(
                                                         mainAxisAlignment:
                                                             MainAxisAlignment
                                                                 .center,
@@ -339,12 +187,12 @@ class _AiTripPageState extends State<AiTripPage> {
                                                     ),
                                                   ),
                                                 ),
-                                                SizedBox(
+                                                const SizedBox(
                                                   height: 20,
                                                 ),
                                                 // Text('Latitude: ${place.latitude}'),
                                                 // Text('Longitude: ${place.longitude}'),
-                                                Divider(),
+                                                const Divider(),
                                               ],
                                             );
                                           }).toList(),
@@ -353,92 +201,92 @@ class _AiTripPageState extends State<AiTripPage> {
                                     );
                                   }).toList(),
                                 ),
-                                Text(
+                                const Text(
                                   'Budget Estimate:',
                                   style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 20,
                                 ),
-                                Text("Accommodation Range per Night",
+                                const Text("Accommodation Range per Night",
                                     style: TextStyle(
                                       fontSize: 16,
                                     )),
                                 Text(
                                   '${trip!.budgetEstimate!.accommodation!.rangePerNight}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 10,
                                 ),
-                                Text("Meals Range per Person",
+                                const Text("Meals Range per Person",
                                     style: TextStyle(
                                       fontSize: 16,
                                     )),
                                 Text(
                                   '${trip!.budgetEstimate!.mealsPerDayPerPerson!.range}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 10,
                                 ),
 
-                                Text("Transportation Range",
+                                const Text("Transportation Range",
                                     style: TextStyle(
                                       fontSize: 16,
                                     )),
                                 Text(
                                   ' ${trip!.budgetEstimate!.transportation!.rangeFor5Days}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 10,
                                 ),
-                                Text("Attractions Range",
+                                const Text("Attractions Range",
                                     style: TextStyle(
                                       fontSize: 16,
                                     )),
                                 Text(
                                   ' ${trip!.budgetEstimate!.attractions!.rangeFor5DaysPerPerson}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 10,
                                 ),
-                                Text("Miscellaneous Range",
+                                const Text("Miscellaneous Range",
                                     style: TextStyle(
                                       fontSize: 16,
                                     )),
                                 Text(
                                   ' ${trip!.budgetEstimate!.miscellaneous!.rangeFor5Days}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 10,
                                 ),
-                                Text("Total Estimated Budget",
+                                const Text("Total Estimated Budget",
                                     style: TextStyle(
                                       fontSize: 16,
                                     )),
                                 Text(
                                   ' ${trip!.budgetEstimate!.totalEstimatedBudgetPerPerson!.range}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 10,
                                 ),
                               ],

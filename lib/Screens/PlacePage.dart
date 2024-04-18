@@ -46,25 +46,6 @@ class _PlacePageState extends State<PlacePage> {
     _updateIconColor();
   }
 
-  // void _startTyping() {
-  //   final text = widget.description;
-  //   Timer.periodic(Duration(milliseconds: 10), (timer) {
-  //     setState(() {
-  //       if (_index < text.length) {
-  //         textToShow = text.substring(0, _index + 1);
-  //         _index++;
-  //         _controller.animateTo(
-  //           _controller.position.maxScrollExtent,
-  //           duration: Duration(milliseconds: 100),
-  //           curve: Curves.easeOut,
-  //         );
-  //       } else {
-  //         timer.cancel();
-  //       }
-  //     });
-  //   });
-  // }
-
   void _startTyping() {
     final text = widget.description;
     Timer.periodic(Duration(milliseconds: 10), (timer) {
@@ -137,16 +118,6 @@ class _PlacePageState extends State<PlacePage> {
               ),
             ),
           ),
-
-          //  IconButton(
-          //     onPressed: () {
-          //       Navigator.of(context).pop();
-          //     },
-          //     icon: Icon(
-          //       Icons.arrow_back,
-          //       color: _iconColor,
-          //       size: 28,
-          //     )),
         ),
       ),
       body: SingleChildScrollView(
@@ -223,11 +194,6 @@ class _PlacePageState extends State<PlacePage> {
                   SizedBox(
                     height: 20,
                   ),
-                  // Text(
-                  //   widget.description,
-                  //   style: TextStyle(height: 2),
-                  // ),
-
                   SingleChildScrollView(
                     child: Align(
                       alignment: Alignment.topLeft,
@@ -243,9 +209,6 @@ class _PlacePageState extends State<PlacePage> {
                 ],
               ),
             ),
-            // LocationButton(
-            //     latitude: double.parse(widget.latitude),
-            //     longitude: double.parse(widget.longitude))
           ],
         ),
       ),
