@@ -436,7 +436,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 "Welcome",
                                 style: TextStyle(
                                   fontSize: 35,
@@ -921,6 +921,111 @@ class _MyHomePageState extends State<MyHomePage> {
               const SizedBox(
                 height: 10,
               ),
+              // Padding(
+              //   padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              //   child: Container(
+              //     height: 120,
+              //     child: ListView.builder(
+              //         scrollDirection: Axis.horizontal,
+              //         itemCount: travelActivities.length,
+              //         itemBuilder: (context, index) {
+              //           return Padding(
+              //             padding: const EdgeInsets.symmetric(horizontal: 5),
+              //             child: Stack(
+              //               children: [
+              //                 Container(
+              //                   width: 100,
+              //                   height: 120,
+              //                   decoration: BoxDecoration(
+              //                     color: Colors.amber,
+              //                     borderRadius: BorderRadius.circular(10),
+              //                   ),
+              //                   child: Stack(
+              //                     alignment: Alignment
+              //                         .center, // Align image to the left side
+              //                     children: [
+              //                       SizedBox(
+              //                         width: 100,
+              //                         height: 120,
+              //                         child: ClipRRect(
+              //                           borderRadius: BorderRadius.circular(10),
+              //                           child: Image.asset(
+              //                             'assets/images/hiking.jpg',
+              //                             fit: BoxFit
+              //                                 .cover, // Adjusted fit to fit height
+              //                             // Set the height of the image to match the container
+              //                           ),
+              //                         ),
+              //                       ),
+              //                       Container(
+              //                         decoration: BoxDecoration(
+              //                           borderRadius: BorderRadius.circular(10),
+              //                           gradient: LinearGradient(
+              //                             begin: Alignment.bottomCenter,
+              //                             end: Alignment.topCenter,
+              //                             colors: [
+              //                               Colors.black.withOpacity(
+              //                                   0.6), // Adjust opacity or change color as needed
+              //                               Colors
+              //                                   .transparent, // You can add more colors here if desired
+              //                             ],
+              //                           ),
+              //                         ),
+              //                       ),
+              //                     ],
+              //                   ),
+              //                 ),
+              //                 Positioned(
+              //                   top: 10,
+              //                   left: 10,
+              //                   child: ClipRRect(
+              //                     borderRadius: BorderRadius.circular(10),
+              //                     child: Stack(
+              //                       alignment: Alignment.center,
+              //                       children: [
+              //                         Container(
+              //                           height: 13,
+              //                           width: 13,
+              //                           decoration: BoxDecoration(
+              //                             color: Colors.white,
+              //                             borderRadius:
+              //                                 BorderRadius.circular(100),
+              //                           ),
+              //                         ),
+              //                         Container(
+              //                           height: 10,
+              //                           width: 10,
+              //                           decoration: BoxDecoration(
+              //                             color: Theme.of(context).primaryColor,
+              //                             borderRadius:
+              //                                 BorderRadius.circular(100),
+              //                           ),
+              //                         ),
+              //                       ],
+              //                     ),
+              //                   ),
+              //                 ),
+              //                 Positioned(
+              //                   bottom: 10,
+              //                   left: 10,
+              //                   child: Text(
+              //                     travelActivities[index],
+              //                     overflow: TextOverflow.ellipsis,
+              //                     style: TextStyle(
+              //                       fontWeight: FontWeight.w700,
+              //                       color: Colors.white,
+              //                     ),
+              //                   ),
+              //                 ),
+              //               ],
+              //             ),
+              //           );
+              //         }),
+              //   ),
+              // ),
+              // SizedBox(
+              //   height: 10,
+              // ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Column(

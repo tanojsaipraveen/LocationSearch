@@ -42,9 +42,6 @@ class _WrapperState extends State<Wrapper> {
         return;
       }
     }
-    // _locationData = await location.getLocation();
-    // print(_locationData.latitude);
-    // print(_locationData.longitude);
   }
 
   @override
@@ -57,11 +54,7 @@ class _WrapperState extends State<Wrapper> {
               return CircularProgressIndicator(); // Or any other loading indicator
             }
             if (snapshot.hasData) {
-              // if (_permissionGranted != PermissionStatus.granted) {
-              //   return BlankPage();
-              // } else {
               return MainPage();
-              //}
             } else {
               return LoginPage();
             }

@@ -15,8 +15,6 @@ class DataController extends GetxController {
   var longitude = RxDouble(0.0);
   var latitude = RxDouble(0.0);
   RxBool isVisible = false.obs;
-  // var count = 0.obs;
-  // increment() => count++;
 
   void toggleVisibility() {
     isVisible.toggle();
@@ -47,9 +45,6 @@ class DataController extends GetxController {
         // return;
       }
     }
-    // _locationData = await location.getLocation();
-    // print(_locationData.latitude);
-    // print(_locationData.longitude);
 
     LocationData locationData = await Location().getLocation();
     // locationData = await location.getLocation();
@@ -60,33 +55,6 @@ class DataController extends GetxController {
 
   Future<void> getLocationData() async {
     try {
-      // _serviceEnabled = await location.serviceEnabled();
-      // if (!_serviceEnabled) {
-      //   _serviceEnabled = await location.requestService();
-      //   if (!_serviceEnabled) {
-      //     //return;
-      //   }
-      // }
-
-      // _permissionGranted = await location.hasPermission();
-      // if (_permissionGranted == PermissionStatus.denied) {
-      //   _permissionGranted = await location.requestPermission();
-      //   if (_permissionGranted != PermissionStatus.granted) {
-      //     // return;
-      //   }
-      // }
-      // _locationData = await location.getLocation();
-      // print(_locationData.latitude);
-      // print(_locationData.longitude);
-
-      //LocationData locationData = await Location().getLocation();
-
-      //LocationData locationData = await getcoordinates();
-      // locationData = await location.getLocation();
-      // lat = locationData.latitude;
-      // lon = locationData.longitude;
-      // latitude.value = locationData.latitude!;
-      // longitude.value = locationData.longitude!;
       if (lat == null) {
         await getcoordinates();
         latitude.value = lat!;
